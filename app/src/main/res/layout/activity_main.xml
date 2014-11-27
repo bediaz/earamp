@@ -5,12 +5,18 @@
     tools:context=".MainActivity"
     android:orientation="horizontal">
 
-    <Switch android:id="@+id/amplify"
+    <Switch android:id="@+id/amplify_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/amplify"
-        android:textAllCaps="true"
-        android:onClick="sendAmplifyState"
+        android:text="@string/amplify_switch"
         />
+
+    <TextView android:id="@+id/amplify_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/amplify_switch"
+        android:typeface="normal"
+        android:textSize="20dp"
+        android:text="@string/amplify_textview" />
 
 </RelativeLayout>
