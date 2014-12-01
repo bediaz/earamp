@@ -1,10 +1,10 @@
 package me.lefdef.hearitall;
 
+import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.media.AudioFormat;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -23,6 +23,7 @@ public class Amplify {
     final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
     //endregion
 
+
     AudioRecord _audioRecord;
     AudioTrack _audioTrack;
     byte[] _buffer;
@@ -30,44 +31,62 @@ public class Amplify {
 
 
     public Amplify() {
+
         int inBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT);
-        int outBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT, inBufferSize);
+
         // TODO: remove blocking on play
+        int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
         _buffer = new byte[inBufferSize];
     }
+
+    boolean _isRecording;
 
     public void startListeningAndPlay() {
         new AsyncTask<Void, String, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                _audioRecord.startRecording();
-
                 if(_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-                    publishProgress("failed to initialize...");
-                    Log.i(TAG, "failed to initialize...");
+                    publishProgress("AudioRecord Failed to Initialize...");
+                    Log.i(TAG, "AudioRecord Failed to Initialize...");
+                    return null;
                 }
+
+
+
+                _audioRecord.startRecording();
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 long lastTime = 0;
-
-                while (AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState()) {
-                    int bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                    stream.write(_buffer, 0, bytesRead);
-
-                    if(System.currentTimeMillis() - lastTime > 1000) {
-                        publishProgress(String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
-                        Log.i(TAG, String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
-                        lastTime = System.currentTimeMillis();
-                    }
-                    if(_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-                        _audioTrack.play();
-                    }
-                    _audioTrack.write(_buffer, 0, bytesRead);
-
+                if(_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
+                    _audioTrack.play();
                 }
-                publishProgress("");
+
+                publishProgress("AudioRecord Initialized, AudioTrack playing...");
+                Log.i(TAG, "AudioRecord Initialized, AudioTrack playing...");
+
+                _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
+
+                int bytesRead;
+
+                while (_isRecording) {
+                    bytesRead = _audioRecord.read(_buffer, 0, 1024);
+                   // stream.write(_buffer, 0, bytesRead);
+
+//                    if(System.currentTimeMillis() - lastTime > 1000) {
+//                        publishProgress(String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
+//                        Log.i(TAG, String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
+//                        lastTime = System.currentTimeMillis();
+//                    }
+
+                    _audioTrack.write(_buffer, 0, bytesRead);
+                }
+
+                publishProgress("Stopping AudioRecord and AudioTrack...");
+
+                _audioRecord.stop();
+                _audioTrack.pause();
 
                 return null;
             }
@@ -84,8 +103,8 @@ public class Amplify {
     }
 
     public void stopListeningAndPlay() {
-        _audioRecord.stop();
-        _audioTrack.pause();
+        _isRecording = false;
+
 //        new AsyncTask<Void, String, Void>() {
 //            @Override
 //            protected Void doInBackground(Void... voids) {
