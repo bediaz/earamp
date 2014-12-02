@@ -43,6 +43,22 @@ public class Amplify {
 
     boolean _isRecording;
 
+    public int getAudioTrackSessionId() {
+        if(_audioTrack != null) {
+            return _audioTrack.getAudioSessionId();
+        }
+
+        return 0;
+    }
+
+    public int getAudioRecordSessionId() {
+        if (_audioRecord != null) {
+            return _audioRecord.getAudioSessionId();
+        }
+
+        return 0;
+    }
+
     public void startListeningAndPlay() {
         new AsyncTask<Void, String, Void>() {
             @Override

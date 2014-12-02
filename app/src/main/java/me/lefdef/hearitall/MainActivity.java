@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.audiofx.Visualizer;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,10 +25,12 @@ public class MainActivity extends Activity {
     TextView amplifyTextView;
     Switch enable_switch;
     Amplify _amplify;
+    Visualizer _visualizer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         setVolumeControlStream(AudioManager.MODE_IN_COMMUNICATION);
         _am = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
@@ -45,9 +48,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        setContentView(R.layout.activity_main);
-
-
         amplifyTextViewState = (TextView)findViewById(R.id.amplify_textview_state);
         amplifyTextView = (TextView)findViewById(R.id.amplify_textview);
         enable_switch = (Switch)findViewById(R.id.amplify_switch);
@@ -63,6 +63,24 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        _visualizer = new Visualizer(_amplify.getAudioTrackSessionId());
+        _visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+        _visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+            @Override
+            public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int i) {
+
+            }
+
+            @Override
+            public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int i) {
+
+            }
+            //TODO: check if 44100Hz is enough for capture rate, or getMaxCaptureRate / 2
+        }, Visualizer.getMaxCaptureRate(), true, false); // don't need onFftDataCapture
+
+        _visualizer.setEnabled(true);
+
     }
 
     private void updateTextView() {
