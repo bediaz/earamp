@@ -1,8 +1,10 @@
 package me.lefdef.hearitall;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.audiofx.Visualizer;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -27,8 +29,21 @@ public class MainActivity extends Activity {
     Amplify _amplify;
     Visualizer _visualizer;
 
+    NoisyAudioStreamer myNoisyAudioStreamReceiver;
+    private IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+
+    private void startPlayback() {
+        registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+    }
+
+    private void stopPlayback() {
+
+        unregisterReceiver(myNoisyAudioStreamReceiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myNoisyAudioStreamReceiver = new NoisyAudioStreamer();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
