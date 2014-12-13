@@ -9,7 +9,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Date;
 
 
 public class Amplify {
@@ -19,14 +18,18 @@ public class Amplify {
     final int SAMPLE_RATE = 44100; // 44100Hz is currently the only rate that is guaranteed to work on all devices, but other rates such as 22050, 16000, and 11025 may work on some devices.
     // TODO: test CHANNEL_IN_STEREO
     final int CHANNEL_CONFIG_IN = AudioFormat.CHANNEL_IN_MONO;
-    final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_STEREO;
+    final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_MONO;
     final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
     //endregion
 
+    private AudioRecord _audioRecord;
+    private AudioTrack _audioTrack;
+    private short[] _buffer;
+    private boolean _isRecording;
 
-    AudioRecord _audioRecord;
-    AudioTrack _audioTrack;
-    byte[] _buffer;
+    public boolean isRecording() {
+        return _isRecording;
+    }
 
 
 
@@ -38,10 +41,10 @@ public class Amplify {
         // TODO: remove blocking on play
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
-        _buffer = new byte[inBufferSize];
+        _buffer = new short[inBufferSize];
     }
 
-    boolean _isRecording;
+
 
     public int getAudioTrackSessionId() {
         if(_audioTrack != null) {
@@ -69,8 +72,6 @@ public class Amplify {
                     return null;
                 }
 
-
-
                 _audioRecord.startRecording();
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -87,7 +88,7 @@ public class Amplify {
                 int bytesRead;
 
                 while (_isRecording) {
-                    bytesRead = _audioRecord.read(_buffer, 0, 1024);
+                    bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
                    // stream.write(_buffer, 0, bytesRead);
 
 //                    if(System.currentTimeMillis() - lastTime > 1000) {
