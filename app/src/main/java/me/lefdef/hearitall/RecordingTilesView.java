@@ -30,25 +30,33 @@ public class RecordingTilesView extends TextView implements View.OnTouchListener
         rect.left = getPaddingLeft();
         rect.top = getPaddingTop();
         rect.bottom = getPaddingBottom();
-        rect.right = getPaddingRight();
+        rect.right = getSuggestedMinimumWidth();
         Paint rectPaint = new Paint();
         rectPaint.setColor(Color.BLUE);
+        rectPaint.setStrokeWidth(50);
 
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.RED);
+        textPaint.setTextSize(40);
+
+        //canvas.drawRect(rect, rectPaint);
+        canvas.drawText("hello", 50, 50, textPaint);
         canvas.drawRect(rect, rectPaint);
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public boolean onTouch(View view, MotionEvent motionEvent)
+    {
         return false;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int minw = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
-        int w = Math.max(minw, MeasureSpec.getSize(widthMeasureSpec));
-
-        int minh = (40);
-        int h = minh;
-        setMeasuredDimension(w, h);
-    }
+//    @Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        int minw = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
+//        int w = Math.max(minw, MeasureSpec.getSize(widthMeasureSpec));
+//
+//        int minh = (40);
+//        int h = minh;
+//        setMeasuredDimension(w, h);
+//    }
 }

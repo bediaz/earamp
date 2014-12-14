@@ -2,58 +2,6 @@
     android:id="@+id/pager"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-
-
 </android.support.v4.view.ViewPager>
 
-<!--<RelativeLayout android:id="@+id/activity_main" xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--xmlns:tools="http://schemas.android.com/tools"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--tools:context=".MainActivity"-->
-    <!--android:orientation="horizontal">-->
 
-    <!--<android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--    android:id="@+id/pager"-->
-    <!--    android:layout_width="match_parent"-->
-    <!--    android:layout_height="match_parent"-->
-    <!--/>-->
-
-
-    <!--<Switch android:id="@+id/amplify_switch"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="@string/amplify_switch"-->
-        <!--android:soundEffectsEnabled="false"-->
-        <!--/>-->
-
-    <!--<TextView android:id="@+id/amplify_textview"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/amplify_switch"-->
-        <!--android:typeface="normal"-->
-        <!--android:textSize="20dp"-->
-        <!--android:text="@string/amplify_textview" />-->
-
-    <!--<TextView android:id="@+id/amplify_textview_state"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/amplify_textview"-->
-        <!--android:typeface="normal"-->
-        <!--android:textSize="20dp"-->
-        <!--android:text="@string/amplify_textview_state" />-->
-
-    <!--<Button-->
-        <!--android:id="@+id/dumBtn"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/amplify_textview_state"-->
-        <!--android:text="click me!"/>-->
-    <!--<Switch-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/dumBtn"-->
-        <!--android:text="Click me!"-->
-        <!--/>-->
-<!--</RelativeLayout>-->
