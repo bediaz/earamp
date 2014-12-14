@@ -21,16 +21,11 @@ public class Amplify {
     final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_MONO;
     final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
     //endregion
-
+    public OnRecordStatusChangeListener _onRecordStatusChangeListener;
     private AudioRecord _audioRecord;
     private AudioTrack _audioTrack;
     private short[] _buffer;
     private boolean _isRecording;
-
-    public boolean isRecording() {
-        return _isRecording;
-    }
-
 
 
     public Amplify() {
@@ -44,10 +39,12 @@ public class Amplify {
         _buffer = new short[inBufferSize];
     }
 
-
+    public boolean isRecording() {
+        return _isRecording;
+    }
 
     public int getAudioTrackSessionId() {
-        if(_audioTrack != null) {
+        if (_audioTrack != null) {
             return _audioTrack.getAudioSessionId();
         }
 
@@ -66,7 +63,7 @@ public class Amplify {
         new AsyncTask<Void, String, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                if(_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                if (_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                     publishProgress("AudioRecord Failed to Initialize...");
                     Log.i(TAG, "AudioRecord Failed to Initialize...");
                     return null;
@@ -76,7 +73,7 @@ public class Amplify {
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 long lastTime = 0;
-                if(_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
+                if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
                     _audioTrack.play();
                 }
 
@@ -89,7 +86,7 @@ public class Amplify {
 
                 while (_isRecording) {
                     bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                   // stream.write(_buffer, 0, bytesRead);
+                    // stream.write(_buffer, 0, bytesRead);
 
 //                    if(System.currentTimeMillis() - lastTime > 1000) {
 //                        publishProgress(String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
@@ -112,12 +109,14 @@ public class Amplify {
             protected void onProgressUpdate(String... values) {
                 super.onProgressUpdate(values);
 
-                if(_onRecordStatusChangeListener != null) {
+                if (_onRecordStatusChangeListener != null) {
                     _onRecordStatusChangeListener.onRecordStatusChanged(values[0], _audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING);
                 }
             }
         }.execute();
     }
+
+    //region OnRecordStatusChangeListener
 
     public void stopListeningAndPlay() {
         _isRecording = false;
@@ -142,20 +141,16 @@ public class Amplify {
 //        }.execute();
     }
 
-    //region OnRecordStatusChangeListener
-
-    public interface OnRecordStatusChangeListener {
-        public void onRecordStatusChanged(String message, boolean status);
-    }
-
-    public OnRecordStatusChangeListener _onRecordStatusChangeListener;
-
     public OnRecordStatusChangeListener getOnRecordStatusChangeListener() {
         return _onRecordStatusChangeListener;
     }
 
     public void setOnRecordStatusChangeListener(OnRecordStatusChangeListener onRecordStatusChangeListener) {
         this._onRecordStatusChangeListener = onRecordStatusChangeListener;
+    }
+
+    public interface OnRecordStatusChangeListener {
+        public void onRecordStatusChanged(String message, boolean status);
     }
     //endregion
 }

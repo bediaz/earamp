@@ -1,6 +1,5 @@
 package me.lefdef.hearitall;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -20,6 +18,7 @@ public class RecordFragment extends Fragment {
 
     RecordingTilesView _recordTiles;
     LinearLayout _rootLayout;
+
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         _rootLayout = new LinearLayout(getActivity());
@@ -28,9 +27,9 @@ public class RecordFragment extends Fragment {
 
         LinearLayout recordingsFragment = (LinearLayout) inflater.inflate(R.layout.fragment_recordings, container, false);
 
-        for(int idNum = 0; idNum < 10; idNum++) {
+        for (int idNum = 0; idNum < 10; idNum++) {
             View rowItem = inflater.inflate(R.layout.row_item, container, false);
-            ((TextView) rowItem.findViewById(R.id.rec_name)).setText("idNum="+idNum);
+            ((TextView) rowItem.findViewById(R.id.rec_name)).setText("idNum=" + idNum);
             ((ImageView) rowItem.findViewById(R.id.icon)).setImageResource(R.drawable.play);
             rowItem.setTag(idNum);
             recordingsFragment.addView(rowItem);//, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));

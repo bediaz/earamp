@@ -5,34 +5,32 @@
     android:layout_gravity="center_horizontal"
     android:background="@android:color/black"
     android:padding="5dp">
+
     <LinearLayout
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal|center_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|center_vertical"
         android:background="@android:color/black"
-        >
+        android:orientation="horizontal">
 
         <ImageButton
+            android:id="@+id/recButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/recButton"
-            android:src="@drawable/record"
+            android:layout_weight="1"
+            android:background="@android:color/black"
             android:clickable="true"
             android:cropToPadding="false"
             android:scaleType="fitCenter"
-            android:background="@android:color/black"
-            android:layout_weight="1"
-            />
+            android:src="@drawable/record" />
 
         <ImageButton
+            android:id="@+id/playButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/playButton"
-            android:src="@drawable/stop"
-            android:scaleType="fitCenter"
-            android:background="@android:color/black"
             android:layout_weight="1"
-            />
+            android:background="@android:color/black"
+            android:scaleType="fitCenter"
+            android:src="@drawable/stop" />
     </LinearLayout>
 </LinearLayout>

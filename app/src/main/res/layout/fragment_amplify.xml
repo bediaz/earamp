@@ -1,55 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/activity_main" xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
     android:orientation="horizontal"
-    android:background="@android:color/holo_orange_dark">
+    tools:context=".MainActivity">
 
-    <Switch android:id="@+id/amplify_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/amplify_switch"
-        android:soundEffectsEnabled="false"
-        />
+    <me.lefdef.hearitall.CircleButton
+        android:id="@+id/circle_button"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:src="@drawable/ic_action_listen_off"
+        app:cb_label="@string/action_listen_off"
+        app:cb_color="#263238"
+        android:layout_marginTop="32dp"
+        android:layout_below="@+id/relativeLayout"
+        android:layout_centerHorizontal="true" />
 
-    <TextView android:id="@+id/amplify_textview"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/amplify_switch"
-        android:typeface="normal"
-        android:textSize="20dp"
-        android:text="@string/amplify_textview" />
-
-    <TextView android:id="@+id/amplify_textview_state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/amplify_textview"
-        android:typeface="normal"
-        android:textSize="20dp"
-        android:text="@string/amplify_textview_state" />
-
-    <Button
-        android:id="@+id/dumBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/amplify_textview_state"
-        android:text="click me!"/>
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/dumBtn"
-        android:text="Click me!"
-        />
+        android:id="@+id/relativeLayout"></RelativeLayout>
 
     <SeekBar
+        android:id="@+id/volume_bar"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:rotation="270"
+        android:layout_marginTop="47dp"
+        android:layout_alignTop="@+id/circle_button"
+        android:layout_toRightOf="@+id/relativeLayout"
+        android:layout_toEndOf="@+id/relativeLayout"
+        android:layout_marginLeft="33dp"
+        android:layout_marginStart="33dp" />
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/seekBar"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/amplify_textview_state"
-        android:layout_toEndOf="@+id/amplify_textview_state"
-        android:layout_marginBottom="143dp"
-        android:max="100" />
+        android:id="@+id/volume_percent"
+        android:layout_marginLeft="25dp"
+        android:layout_marginStart="25dp"
+        android:textSize="20dp"
+        android:text="40%"
+        android:layout_below="@+id/circle_button"
+        android:layout_alignLeft="@+id/volume_bar"
+        android:layout_alignStart="@+id/volume_bar" />
+
 </RelativeLayout>

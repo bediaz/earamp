@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<declare-styleable name="RecordingTilesView">
-    <attr name="showText" format="boolean" />
-    <attr name="labelPosition" format="enum">
-        <enum name="left" value="0"/>
-        <enum name="right" value="2"/>
-        <enum name="center" value="1"/>
-    </attr>
-</declare-styleable>
+    <declare-styleable name="RecordingTilesView">
+        <attr name="showText" format="boolean" />
+        <attr name="labelPosition" format="enum">
+            <enum name="left" value="0" />
+            <enum name="right" value="2" />
+            <enum name="center" value="1" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="CircleButton">
+        <attr name="cb_color" format="color" />
+        <attr name="cb_pressedRingWidth" format="dimension" />
+        <attr name="cb_label" format="string" />
+    </declare-styleable>
 </resources>

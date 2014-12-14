@@ -9,5 +9,11 @@
     <string name="title_activity_amplify">AmplifyActivity</string>
     <string name="activity_main"></string>
     <string name="amplify_textview_state"></string>
+    <string name="action_listen">LISTEN</string>
+    <string name="action_stop">STOP</string>
+    <string name="action_pause">PAUSE</string>
+    <string name="action_play">PLAY</string>
+    <string name="action_listen_off">OFF</string>
+    <string name="action_listen_on">ON</string>
 
 </resources>

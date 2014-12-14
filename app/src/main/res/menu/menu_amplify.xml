@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/action_record"
-    android:icon="@drawable/record"
-    android:title="@string/action_record"
-    android:showAsAction="always|withText"
-    />
-    <item android:id="@+id/action_record_and_play"
-        android:icon="@drawable/loudspeaker"
-        android:title="@string/action_record_and_play"
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_record"
+        android:icon="@drawable/record"
         android:showAsAction="always|withText"
-        />
+        android:title="@string/action_record" />
+    <item
+        android:id="@+id/action_record_and_play"
+        android:icon="@drawable/loudspeaker"
+        android:showAsAction="always|withText"
+        android:title="@string/action_record_and_play" />
 </menu>

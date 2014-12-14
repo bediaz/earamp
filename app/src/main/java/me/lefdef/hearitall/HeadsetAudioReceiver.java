@@ -9,8 +9,7 @@ import android.util.Log;
 /**
  * Created by u0408275 on 12/8/14.
  */
-public class HeadsetAudioReceiver extends BroadcastReceiver
-{
+public class HeadsetAudioReceiver extends BroadcastReceiver {
     String TAG = "HEADSETAUDIORECEIVER";
 
     @Override
@@ -21,19 +20,16 @@ public class HeadsetAudioReceiver extends BroadcastReceiver
         // TODO: detect ACTION_HEADSET_PLUG
         if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
             // Pause the playback
-        } else if(intent.hasExtra("state")) {
+        } else if (intent.hasExtra("state")) {
             int headsetState = intent.getIntExtra("state", 0); // default to 0 for unplugged
             Log.i(TAG, "STATE=" + headsetState);
 
-            if(headsetState == 0) { // assume anything else is plugged in.
+            if (headsetState == 0) { // assume anything else is plugged in.
                 // TODO: stop audio (if playing), prompt user to plug it back in
             } else {
                 // TODO: allow audio playback
             }
         }
-
-
-
 
 
     }

@@ -12,8 +12,9 @@ import android.widget.TextView;
 /**
  * Created by Brigham on 12/13/2014.
  */
-public class RecordingTilesView extends TextView implements View.OnTouchListener{
+public class RecordingTilesView extends TextView implements View.OnTouchListener {
     Context appContext; // reference to main activity context
+
     public RecordingTilesView(Context context) {
         super(context);
         appContext = context;
@@ -31,11 +32,11 @@ public class RecordingTilesView extends TextView implements View.OnTouchListener
         rect.top = getPaddingTop();
         rect.bottom = getPaddingBottom();
         rect.right = getSuggestedMinimumWidth();
-        Paint rectPaint = new Paint();
+        Paint rectPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         rectPaint.setColor(Color.BLUE);
         rectPaint.setStrokeWidth(50);
 
-        Paint textPaint = new Paint();
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setColor(Color.RED);
         textPaint.setTextSize(40);
 
@@ -45,8 +46,7 @@ public class RecordingTilesView extends TextView implements View.OnTouchListener
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent)
-    {
+    public boolean onTouch(View view, MotionEvent motionEvent) {
         return false;
     }
 
