@@ -27,7 +27,8 @@ public class AmplifyFragment extends Fragment {
 
     // region XML UI
 
-    private CircleButton _circleButton;
+    private CircleButton _off_onButton;
+    private CircleButton _repeatButton;
     private TextView _volumeText;
     private SeekBar _volSeekBar;
 
@@ -46,7 +47,8 @@ public class AmplifyFragment extends Fragment {
         // layout stuff
         View rootView = inflater.inflate(R.layout.fragment_amplify, container, false);
 
-        _circleButton = (CircleButton) rootView.findViewById(R.id.circle_button);
+        _off_onButton = (CircleButton) rootView.findViewById(R.id.off_on_button);
+        _repeatButton = (CircleButton) rootView.findViewById(R.id.repeat_button);
         _volumeText = (TextView) rootView.findViewById(R.id.volume_percent);
         _volSeekBar = (SeekBar) rootView.findViewById(R.id.volume_bar);
 
@@ -76,24 +78,32 @@ public class AmplifyFragment extends Fragment {
             }
         });
 
-        _circleButton.setSoundEffectsEnabled(false);
+        _off_onButton.setSoundEffectsEnabled(false);
 
-        _circleButton.setOnClickListener(new View.OnClickListener() {
+        _off_onButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (_amplify.isRecording()) {
+                    _amplify.stopListeningAndPlay();
+                    _off_onButton.setImageResource(R.drawable.ic_action_listen_off);
+                    _off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
+                    _off_onButton.setColor(getResources().getColor(R.color.blue_gray));
+                } else {
+                    _amplify.startListeningAndPlay();
+                    _off_onButton.setImageResource(R.drawable.ic_action_listen_on);
+                    _off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
+                    _off_onButton.setColor(getResources().getColor(R.color.light_green));
+                }
+
+            }
+        });
+
+        _repeatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(_amplify.isRecording()) {
-                    _amplify.stopListeningAndPlay();
-                    _circleButton.setImageResource(R.drawable.ic_action_listen_off);
-                    _circleButton.setLabel(getResources().getString(R.string.action_listen_off));
-                    _circleButton.setColor(Color.parseColor("#263238")); // blue gray
+                   _amplify.repeat();
                 }
-                else {
-                    _amplify.startListeningAndPlay();
-                    _circleButton.setImageResource(R.drawable.ic_action_listen_on);
-                    _circleButton.setLabel(getResources().getString(R.string.action_listen_on));
-                    _circleButton.setColor(Color.parseColor("#8DBA56")); // icon green
-                }
-
             }
         });
 
@@ -129,7 +139,7 @@ public class AmplifyFragment extends Fragment {
             //TODO: check if 44100Hz is enough for capture rate, or getMaxCaptureRate / 2
         }, Visualizer.getMaxCaptureRate(), true, false); // don't need onFftDataCapture
 
-        _visualizerView.setEnabled(true);
+//1        _visualizerView.setEnabled(true);
     }
 
     private void startPlayback() {
@@ -139,8 +149,6 @@ public class AmplifyFragment extends Fragment {
     private void stopPlayback() {
         getActivity().unregisterReceiver(_audioStreamReceiver);
     }
-
-
 
     @Override
     public void onPause() {

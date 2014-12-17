@@ -25,6 +25,7 @@ public class Amplify {
     private AudioRecord _audioRecord;
     private AudioTrack _audioTrack;
     private short[] _buffer;
+    private short[] _audioBuffer;
     private boolean _isRecording;
 
 
@@ -37,6 +38,7 @@ public class Amplify {
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
         _buffer = new short[inBufferSize];
+        _audioBuffer = new short[26214400];
     }
 
     public boolean isRecording() {
@@ -51,6 +53,34 @@ public class Amplify {
         return 0;
     }
 
+    public void repeat() {
+        stopListeningAndPlay();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Log.e(TAG, e.getMessage());
+            return;
+        }
+
+            _audioTrack.pause();
+            _audioTrack.flush();
+
+        int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
+        AudioTrack _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STATIC);
+        _audioTrack.mof=
+
+
+        _audioTrack.write(_audioBuffer, 0, prevBytesRead);
+        _audioTrack.setLoopPoints(0, prevBytesRead/2, -1);
+
+
+        if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
+            _audioTrack.play();
+
+        }
+        Log.i(TAG, String.format("audiotrack playing=%s", _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING);
+    }
+
     public int getAudioRecordSessionId() {
         if (_audioRecord != null) {
             return _audioRecord.getAudioSessionId();
@@ -59,26 +89,29 @@ public class Amplify {
         return 0;
     }
 
+    int prevBytesRead = 0;
+
     public void startListeningAndPlay() {
         new AsyncTask<Void, String, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
                 if (_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-                    publishProgress("AudioRecord Failed to Initialize...");
-                    Log.i(TAG, "AudioRecord Failed to Initialize...");
+                    // publishProgress("AudioRecord Failed to Initialize...");
+                    // Log.i(TAG, "AudioRecord Failed to Initialize...");
                     return null;
                 }
 
+                int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
+                _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
+
                 _audioRecord.startRecording();
 
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                long lastTime = 0;
                 if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
                     _audioTrack.play();
                 }
 
-                publishProgress("AudioRecord Initialized, AudioTrack playing...");
-                Log.i(TAG, "AudioRecord Initialized, AudioTrack playing...");
+                //publishProgress("AudioRecord Initialized, AudioTrack playing...");
+                //Log.i(TAG, "AudioRecord Initialized, AudioTrack playing...");
 
                 _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
 
@@ -86,14 +119,12 @@ public class Amplify {
 
                 while (_isRecording) {
                     bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                    // stream.write(_buffer, 0, bytesRead);
-
-//                    if(System.currentTimeMillis() - lastTime > 1000) {
-//                        publishProgress(String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
-//                        Log.i(TAG, String.format("bytesRead=%1$s, outputStreamSize=%2$s", bytesRead, stream.size()));
-//                        lastTime = System.currentTimeMillis();
+                    System.arraycopy(_buffer, 0, _audioBuffer, prevBytesRead, bytesRead);
+                    prevBytesRead += bytesRead;
+//                    if(_audioBuffer.length >= prevBytesRead) {
+//                        prevBytesRead = 0;
+                        Log.i("TAG", String.format("prevBytesRead=%s", prevBytesRead));
 //                    }
-
                     _audioTrack.write(_buffer, 0, bytesRead);
                 }
 

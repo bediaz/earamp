@@ -7,18 +7,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
+    android:background="#D5FFEA"
     tools:context=".MainActivity">
 
     <me.lefdef.hearitall.CircleButton
-        android:id="@+id/circle_button"
+        android:id="@+id/off_on_button"
         android:layout_width="128dp"
         android:layout_height="128dp"
         android:src="@drawable/ic_action_listen_off"
         app:cb_label="@string/action_listen_off"
-        app:cb_color="#263238"
+        app:cb_color="@color/blue_gray"
+        app:cb_label_size="24"
         android:layout_marginTop="32dp"
         android:layout_below="@+id/relativeLayout"
         android:layout_centerHorizontal="true" />
+
+    <me.lefdef.hearitall.CircleButton
+        android:id="@+id/repeat_button"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@drawable/ic_repeat"
+        app:cb_label="@string/action_repeat"
+        app:cb_color="#6AB5FF"
+        app:cb_label_size="24"
+        android:layout_below="@+id/volume_percent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="70dp"
+        android:layout_marginEnd="70dp"
+        android:layout_marginTop="130dp"
+        android:padding="25dp" />
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -32,7 +50,7 @@
         android:max="100"
         android:rotation="270"
         android:layout_marginTop="47dp"
-        android:layout_alignTop="@+id/circle_button"
+        android:layout_alignTop="@+id/off_on_button"
         android:layout_toRightOf="@+id/relativeLayout"
         android:layout_toEndOf="@+id/relativeLayout"
         android:layout_marginLeft="33dp"
@@ -46,7 +64,7 @@
         android:layout_marginStart="25dp"
         android:textSize="20dp"
         android:text="40%"
-        android:layout_below="@+id/circle_button"
+        android:layout_below="@+id/off_on_button"
         android:layout_alignLeft="@+id/volume_bar"
         android:layout_alignStart="@+id/volume_bar" />
 

@@ -5,4 +5,13 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <color name="light_cyan">#D5FFEA</color>
+    <color name="crimson">#CA0023</color>
+    <color name="slate_blue">#6AB5FF</color>
+    <color name="light_orange">#FFBD35</color>
+    <color name="electric_purple">#BF00FF</color>
+    <color name="pale_green">#9FFF9F</color>
+    <color name="light_green">#8DBA56</color>
+    <color name="blue_gray">#263238</color>
+
 </resources>

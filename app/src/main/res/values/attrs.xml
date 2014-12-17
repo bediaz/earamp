@@ -12,5 +12,6 @@
         <attr name="cb_color" format="color" />
         <attr name="cb_pressedRingWidth" format="dimension" />
         <attr name="cb_label" format="string" />
+        <attr name="cb_label_size" format="integer" />
     </declare-styleable>
 </resources>

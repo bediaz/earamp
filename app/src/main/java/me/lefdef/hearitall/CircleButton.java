@@ -16,7 +16,9 @@ public class CircleButton extends ImageView {
     private int _centerX;
     private int _centerY;
     private int _radius;
+    private int _label_size;
     private String _label = "";
+
     private Paint _circlePaint;
     private Paint _textPaint;
 
@@ -41,7 +43,10 @@ public class CircleButton extends ImageView {
     }
     public void setColor(int color) {
         _circlePaint.setColor(color);
-
+        invalidate();
+    }
+    public void setLabelSize(int size) {
+        _label_size = size;
         invalidate();
     }
 
@@ -51,11 +56,13 @@ public class CircleButton extends ImageView {
         setClickable(true);
 
         int circleColor = Color.parseColor("#F50057"); // pink
+        _label_size = 20; //def value
 
         if(attrs != null) {
             final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.CircleButton);
             circleColor = typedArray.getColor(R.styleable.CircleButton_cb_color, circleColor);
             _label = typedArray.getString(R.styleable.CircleButton_cb_label);
+            _label_size = typedArray.getInteger(R.styleable.CircleButton_cb_label_size, 20);
             typedArray.recycle();
         }
 
@@ -65,7 +72,7 @@ public class CircleButton extends ImageView {
 
         _textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         _textPaint.setColor(circleColor == Color.WHITE ? Color.BLACK : Color.WHITE); // don't make text same color as circle
-        _textPaint.setTextSize(20);
+        _textPaint.setTextSize(_label_size);
         _textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
