@@ -84,15 +84,9 @@ public class AmplifyFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (_amplify.isRecording()) {
-                    _amplify.stopListeningAndPlay();
-                    _off_onButton.setImageResource(R.drawable.ic_action_listen_off);
-                    _off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
-                    _off_onButton.setColor(getResources().getColor(R.color.blue_gray));
+                    stopListeningAndPlayback();
                 } else {
-                    _amplify.startListeningAndPlay();
-                    _off_onButton.setImageResource(R.drawable.ic_action_listen_on);
-                    _off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
-                    _off_onButton.setColor(getResources().getColor(R.color.light_green));
+                    startListeningAndPlayback();
                 }
 
             }
@@ -101,9 +95,10 @@ public class AmplifyFragment extends Fragment {
         _repeatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(_amplify.isRecording()) {
-                   _amplify.repeat();
+                if (_amplify.isRecording()) {
+                    stopListeningAndPlayback();
                 }
+                _amplify.repeat();
             }
         });
 
@@ -142,12 +137,22 @@ public class AmplifyFragment extends Fragment {
 //1        _visualizerView.setEnabled(true);
     }
 
-    private void startPlayback() {
-        getActivity().registerReceiver(_audioStreamReceiver, _intentFilter);
+    private void stopListeningAndPlayback() {
+        Log.i(TAG, "stopListeningAndPlayback");
+        _amplify.stopListeningAndPlay();
+        _off_onButton.setImageResource(R.drawable.ic_action_listen_off);
+        _off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
+        _off_onButton.setColor(getResources().getColor(R.color.blue_gray));
+        _off_onButton.invalidate();
     }
 
-    private void stopPlayback() {
-        getActivity().unregisterReceiver(_audioStreamReceiver);
+    private void startListeningAndPlayback() {
+        Log.i(TAG, "startListeningAndPlayback");
+        _amplify.startListeningAndPlay();
+        _off_onButton.setImageResource(R.drawable.ic_action_listen_on);
+        _off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
+        _off_onButton.setColor(getResources().getColor(R.color.light_green));
+        _off_onButton.invalidate();
     }
 
     @Override

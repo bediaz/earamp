@@ -8,7 +8,10 @@ import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 
 public class Amplify {
@@ -25,8 +28,19 @@ public class Amplify {
     private AudioRecord _audioRecord;
     private AudioTrack _audioTrack;
     private short[] _buffer;
-    private short[] _audioBuffer;
+    private short[] _audioCache;
+    private int[] _cacheIndices;
     private boolean _isRecording;
+
+    // cache variables
+    private int cacheIndex = 0;
+    private int repeatLength = 10; // seconds to keep of audio cache
+    private int _totalBytesRead = 0;
+
+    private int _intervals = 0;
+
+    private final ScheduledExecutorService _audioCacheService = Executors.newScheduledThreadPool(1); // create a single thread
+    private ScheduledFuture _audioCacheServiceHandle;
 
 
     public Amplify() {
@@ -38,8 +52,28 @@ public class Amplify {
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
         _buffer = new short[inBufferSize];
-        _audioBuffer = new short[26214400];
+        _audioCache = new short[_buffer.length*1000];
+        _cacheIndices = new int[repeatLength];
+
+        // TODO: setup timer/scheduled executor
     }
+
+    private void refreshCacheIndices() {
+
+        if(cacheIndex < _cacheIndices.length) {
+            _cacheIndices[cacheIndex] = _totalBytesRead;
+        }
+        else {
+            Log.e(TAG, "Cache index is larger than cache size!");
+            throw new IndexOutOfBoundsException("Cache index is larger than cache size!");
+        }
+
+        cacheIndex = cacheIndex >= _cacheIndices.length - 1 ? 0 : ++cacheIndex; // what did i just write? anyway it resets the cacheindex..
+
+        _intervals++;
+        Log.i(TAG, String.format("refreshCacheIndices=%s, cacheIndex=%s, totalBytesRead=%s", _intervals, cacheIndex, _totalBytesRead));
+    }
+
 
     public boolean isRecording() {
         return _isRecording;
@@ -54,7 +88,8 @@ public class Amplify {
     }
 
     public void repeat() {
-        stopListeningAndPlay();
+
+        // give it a second for audio to stop playing
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -62,23 +97,35 @@ public class Amplify {
             return;
         }
 
-            _audioTrack.pause();
-            _audioTrack.flush();
-
-        int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
-        AudioTrack _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STATIC);
-        _audioTrack.mof=
-
-
-        _audioTrack.write(_audioBuffer, 0, prevBytesRead);
-        _audioTrack.setLoopPoints(0, prevBytesRead/2, -1);
-
+        // logic here is that in a revolving array index the bucket farthest from current index will be index + 1. The bucket closes will be index - 1 since that was prior index.
+        // Except if your in tail position then the head is farthest so 9 -> 0
+        int startBucket = cacheIndex == _cacheIndices.length - 1 ? 0 : cacheIndex + 1;
+        if(_intervals < 10) {
+            startBucket = 0;
+        }
+        int startFrame = _cacheIndices[startBucket];
 
         if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
             _audioTrack.play();
-
+            Log.i(TAG, String.format("audioTrack repeat isPlaying=%b", _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING));
         }
-        Log.i(TAG, String.format("audiotrack playing=%s", _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING);
+
+        Log.i(TAG, String.format("repeat(): refreshCacheIndices=%d, cacheIndex=%d, startFrame=%d, totalBytesRead=%d", _intervals, cacheIndex, startFrame, _totalBytesRead));
+        _audioTrack.setNotificationMarkerPosition(_totalBytesRead - startFrame - 1);
+        Log.i(TAG, String.format("repeat(): setNotificationMarkerPosition=%d", _totalBytesRead - startFrame));
+        _audioTrack.write(_audioCache, startFrame, _totalBytesRead - startFrame - 1);
+
+        _audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+            @Override
+            public void onMarkerReached(AudioTrack track) {
+                Log.i(TAG, String.format("repeat playback done. isPlaying=%s, playbackPosition=%d",_audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING, _audioTrack.getPlaybackHeadPosition()));
+            }
+
+            @Override
+            public void onPeriodicNotification(AudioTrack track) {
+
+            }
+        });
     }
 
     public int getAudioRecordSessionId() {
@@ -89,7 +136,7 @@ public class Amplify {
         return 0;
     }
 
-    int prevBytesRead = 0;
+
 
     public void startListeningAndPlay() {
         new AsyncTask<Void, String, Void>() {
@@ -109,29 +156,40 @@ public class Amplify {
                 if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
                     _audioTrack.play();
                 }
-
-                //publishProgress("AudioRecord Initialized, AudioTrack playing...");
-                //Log.i(TAG, "AudioRecord Initialized, AudioTrack playing...");
-
                 _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
 
                 int bytesRead;
 
+                if(_isRecording) { // call once
+                    _audioCacheServiceHandle = _audioCacheService.scheduleAtFixedRate(new Runnable() {
+                        @Override
+                        public void run() {
+                            refreshCacheIndices();
+                        }
+                    }, 0, 1000, TimeUnit.MILLISECONDS); // start immediately, run every 1000ms
+                }
+
+
                 while (_isRecording) {
                     bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                    System.arraycopy(_buffer, 0, _audioBuffer, prevBytesRead, bytesRead);
-                    prevBytesRead += bytesRead;
-//                    if(_audioBuffer.length >= prevBytesRead) {
-//                        prevBytesRead = 0;
-                        Log.i("TAG", String.format("prevBytesRead=%s", prevBytesRead));
-//                    }
+                    System.arraycopy(_buffer, 0, _audioCache, _totalBytesRead, bytesRead);
+                    _totalBytesRead += bytesRead;
+                    //Log.i("TAG", String.format("_totalBytesRead=%s", _totalBytesRead));
                     _audioTrack.write(_buffer, 0, bytesRead);
                 }
 
-                publishProgress("Stopping AudioRecord and AudioTrack...");
-
+                //
+                if(_audioCacheServiceHandle != null) {
+                    _audioCacheServiceHandle.cancel(true);
+                }
                 _audioRecord.stop();
+
                 _audioTrack.pause();
+                _audioTrack.flush();
+
+                Log.i(TAG, String.format("isRecording=%b, audioCacheService isTerminated=%b",
+                        _isRecording,
+                        _audioCacheService.isTerminated()));
 
                 return null;
             }
