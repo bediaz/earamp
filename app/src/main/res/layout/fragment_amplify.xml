@@ -12,15 +12,15 @@
 
     <me.lefdef.hearitall.CircleButton
         android:id="@+id/off_on_button"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
+        android:layout_width="144dp"
+        android:layout_height="144dp"
         android:src="@drawable/ic_action_listen_off"
-        app:cb_label="@string/action_listen_off"
+        app:cb_label=""
         app:cb_color="@color/blue_gray"
         app:cb_label_size="24"
         android:layout_marginTop="32dp"
-        android:layout_below="@+id/relativeLayout"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        />
 
     <me.lefdef.hearitall.CircleButton
         android:id="@+id/repeat_button"
@@ -30,42 +30,55 @@
         app:cb_label="@string/action_repeat"
         app:cb_color="#6AB5FF"
         app:cb_label_size="24"
-        android:layout_below="@+id/volume_percent"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="70dp"
-        android:layout_marginEnd="70dp"
-        android:layout_marginTop="130dp"
-        android:padding="25dp" />
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/relativeLayout"></RelativeLayout>
+        android:padding="25dp"
+        android:layout_below="@+id/off_on_button"
+        android:layout_toRightOf="@+id/off_on_button"
+        android:layout_toEndOf="@+id/off_on_button" />
 
     <SeekBar
         android:id="@+id/volume_bar"
         android:layout_width="240dp"
         android:layout_height="wrap_content"
         android:max="100"
-        android:rotation="270"
-        android:layout_marginTop="47dp"
-        android:layout_alignTop="@+id/off_on_button"
-        android:layout_toRightOf="@+id/relativeLayout"
-        android:layout_toEndOf="@+id/relativeLayout"
-        android:layout_marginLeft="33dp"
-        android:layout_marginStart="33dp" />
+        android:layout_gravity="center|left"
+        android:layout_below="@+id/off_on_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="122dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/volume_percent"
-        android:layout_marginLeft="25dp"
-        android:layout_marginStart="25dp"
         android:textSize="20dp"
         android:text="40%"
-        android:layout_below="@+id/off_on_button"
-        android:layout_alignLeft="@+id/volume_bar"
-        android:layout_alignStart="@+id/volume_bar" />
+        android:layout_below="@+id/volume_bar"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="VISUALIZER"
+        android:id="@+id/visualizer_place_holder"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        android:background="@color/crimson"
+        android:textAlignment="center"
+        android:gravity="center_vertical|center_horizontal" />
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/volume"
+        android:scaleType="fitCenter"
+        android:layout_toStartOf="@+id/volume_bar"
+        android:layout_alignBottom="@+id/volume_bar"
+        android:layout_alignTop="@+id/volume_bar" />
 
 </RelativeLayout>

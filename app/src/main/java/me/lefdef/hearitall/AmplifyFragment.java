@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -41,23 +42,11 @@ public class AmplifyFragment extends Fragment {
 
     private HeadsetAudioReceiver _audioStreamReceiver;
     private IntentFilter _intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+    private int _volumeLevel;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // layout stuff
-        View rootView = inflater.inflate(R.layout.fragment_amplify, container, false);
-
-        _off_onButton = (CircleButton) rootView.findViewById(R.id.off_on_button);
-        _repeatButton = (CircleButton) rootView.findViewById(R.id.repeat_button);
-        _volumeText = (TextView) rootView.findViewById(R.id.volume_percent);
-        _volSeekBar = (SeekBar) rootView.findViewById(R.id.volume_bar);
-
-        return rootView;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         // audio setup
         getActivity().setVolumeControlStream(AudioManager.MODE_IN_COMMUNICATION);
@@ -66,17 +55,41 @@ public class AmplifyFragment extends Fragment {
 
         _audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
         _audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+        _volumeLevel = _audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
         _amplify = new Amplify();
         _amplify.setOnRecordStatusChangeListener(new Amplify.OnRecordStatusChangeListener() {
             @Override
             public void onRecordStatusChanged(String message, boolean status) {
-//                _amplifyTextView.setText(String.format(message));//"Switch enabled? %s", _enable_switch.isChecked()));
                 String state = String.format("Status: %s", status ? "Recording" : "Not Recording");
-//                _amplifyTextViewState.setText(state);
                 Log.i(TAG, state);
 
             }
         });
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // layout stuff
+        View rootView = inflater.inflate(R.layout.fragment_amplify, container, false);
+
+        _off_onButton = (CircleButton) rootView.findViewById(R.id.off_on_button);
+        _repeatButton = (CircleButton) rootView.findViewById(R.id.repeat_button);
+        _volSeekBar = (SeekBar) rootView.findViewById(R.id.volume_bar);
+        int max_volume = _audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        _volSeekBar.setMax(max_volume);
+        _volSeekBar.setProgress(_volumeLevel);
+        _volumeText = (TextView) rootView.findViewById(R.id.volume_percent);
+        _volumeText.setText(String.format("%.0f%%", 100.0*(float)_volSeekBar.getProgress()/max_volume));
+
+
+        return rootView;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
 
         _off_onButton.setSoundEffectsEnabled(false);
 
@@ -105,7 +118,8 @@ public class AmplifyFragment extends Fragment {
         _volSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                _volumeText.setText(progress + "%");
+                _volumeText.setText(String.format("%.0f%%", 100.0*(float)_volSeekBar.getProgress()/_volSeekBar.getMax()));
+                _audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
             }
 
             @Override
@@ -141,7 +155,7 @@ public class AmplifyFragment extends Fragment {
         Log.i(TAG, "stopListeningAndPlayback");
         _amplify.stopListeningAndPlay();
         _off_onButton.setImageResource(R.drawable.ic_action_listen_off);
-        _off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
+        //_off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
         _off_onButton.setColor(getResources().getColor(R.color.blue_gray));
         _off_onButton.invalidate();
     }
@@ -150,7 +164,7 @@ public class AmplifyFragment extends Fragment {
         Log.i(TAG, "startListeningAndPlayback");
         _amplify.startListeningAndPlay();
         _off_onButton.setImageResource(R.drawable.ic_action_listen_on);
-        _off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
+        //_off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
         _off_onButton.setColor(getResources().getColor(R.color.light_green));
         _off_onButton.invalidate();
     }

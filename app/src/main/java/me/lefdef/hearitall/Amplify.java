@@ -8,6 +8,7 @@ import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -29,11 +30,11 @@ public class Amplify {
     private AudioTrack _audioTrack;
     private short[] _buffer;
     private short[] _audioCache;
-    private int[] _cacheIndices;
+    private LinkedList<Integer> _cacheIndices;
     private boolean _isRecording;
 
     // cache variables
-    private int cacheIndex = 0;
+    //private int cacheIndex = 0;
     private int repeatLength = 10; // seconds to keep of audio cache
     private int _totalBytesRead = 0;
 
@@ -41,6 +42,7 @@ public class Amplify {
 
     private final ScheduledExecutorService _audioCacheService = Executors.newScheduledThreadPool(1); // create a single thread
     private ScheduledFuture _audioCacheServiceHandle;
+    private int MAX_BUFFER;
 
 
     public Amplify() {
@@ -50,30 +52,27 @@ public class Amplify {
 
         // TODO: remove blocking on play
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
+
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
         _buffer = new short[inBufferSize];
-        _audioCache = new short[_buffer.length*200];
-        _cacheIndices = new int[repeatLength];
+        _audioCache = new short[outBufferSize*200];
+        MAX_BUFFER =  (int)(_audioCache.length * 0.80);
+
+        _cacheIndices = new LinkedList<Integer>();
 
         // TODO: setup timer/scheduled executor
     }
 
     private void refreshCacheIndices() {
 
-        if(cacheIndex < _cacheIndices.length) {
-            _cacheIndices[cacheIndex] = _totalBytesRead;
+        while(_cacheIndices.size() >= repeatLength && _cacheIndices.size() > 0) {
+            _cacheIndices.removeFirst();
         }
-        else {
-            Log.e(TAG, "Cache index is larger than cache size!");
-            throw new IndexOutOfBoundsException("Cache index is larger than cache size!");
-        }
-
-        cacheIndex = cacheIndex >= _cacheIndices.length - 1 ? 0 : ++cacheIndex; // what did i just write? anyway it resets the cacheindex..
+        _cacheIndices.addLast(_totalBytesRead);
 
         _intervals++;
-        Log.i(TAG, String.format("refreshCacheIndices=%s, cacheIndex=%s, totalBytesRead=%s, capacity=%.2f", _intervals, cacheIndex, _totalBytesRead, 100.0*(float)_totalBytesRead/_audioCache.length));
+        Log.i(TAG, String.format("refreshCacheIndices=%s, totalBytesRead=%s, capacity=%.2f", _intervals, _totalBytesRead, 100.0*(float)_totalBytesRead/_audioCache.length));
     }
-
 
     public boolean isRecording() {
         return _isRecording;
@@ -86,34 +85,27 @@ public class Amplify {
 
         return 0;
     }
-
     public void repeat() {
-
-        // give it a second for audio to stop playing
+        if(_totalBytesRead == 0) { return; }
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
-            Log.e(TAG, e.getMessage());
-            return;
+            e.printStackTrace();
         }
 
-        // logic here is that in a revolving array index the bucket farthest from current index will be index + 1. The bucket closes will be index - 1 since that was prior index.
-        // Except if your in tail position then the head is farthest so 9 -> 0
-        int startBucket = cacheIndex == _cacheIndices.length - 1 ? 0 : cacheIndex + 1;
-        if(_intervals < 10) {
-            startBucket = 0;
-        }
-        int startFrame = _cacheIndices[startBucket];
+        int startFrame = _cacheIndices.isEmpty() ? 0 : _cacheIndices.getFirst();
 
         if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
             _audioTrack.play();
             Log.i(TAG, String.format("audioTrack repeat isPlaying=%b", _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING));
         }
 
-        Log.i(TAG, String.format("repeat(): refreshCacheIndices=%d, cacheIndex=%d, startFrame=%d, totalBytesRead=%d", _intervals, cacheIndex, startFrame, _totalBytesRead));
-        _audioTrack.setNotificationMarkerPosition(_totalBytesRead - startFrame - 1);
-        Log.i(TAG, String.format("repeat(): setNotificationMarkerPosition=%d", _totalBytesRead - startFrame));
+        Log.i(TAG, String.format("repeat(): refreshCacheIndices=%d, startFrame=%d, totalBytesRead=%d", _intervals, startFrame, _totalBytesRead));
+        //_audioTrack.setNotificationMarkerPosition(_audioTrack.getPlaybackHeadPosition() + (duration * sampleRate));
+        _audioTrack.setNotificationMarkerPosition(_totalBytesRead - 1);
+        Log.i(TAG, String.format("repeat(): setNotificationMarkerPosition=%d", _totalBytesRead - 1));
         _audioTrack.write(_audioCache, startFrame, _totalBytesRead - startFrame - 1);
+        Log.i(TAG, String.format("write: _audioCacheSize=%d, begin=%d, end=%d", _audioCache.length, startFrame, _totalBytesRead - startFrame - 1));
 
         _audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
             @Override
@@ -206,21 +198,22 @@ public class Amplify {
         System.arraycopy(_buffer, 0, _audioCache, _totalBytesRead, bytesRead);
 
         _totalBytesRead += bytesRead;
-        if(_totalBytesRead >= _audioCache.length * 0.80) { // if nearing 80% capacity then reset index to beginning of buffer
+        if(_totalBytesRead >= MAX_BUFFER) { // if MAX_BUFFER hit then reset index to beginning of buffer
             Log.i(TAG, "Trimming the audioCache");
-            int startBucket = cacheIndex == _cacheIndices.length - 1 ? 0 : cacheIndex + 1;
-            int startFrame = _cacheIndices[startBucket];
+            int startFrame = _cacheIndices.isEmpty() ? 0 : _cacheIndices.getFirst();
             short[] temp = new short[_audioCache.length];
-            //arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-            System.arraycopy(_audioCache, startFrame, temp, 0, _totalBytesRead - startFrame);
-            for(int i = 0; i < _cacheIndices.length; i++) {
-                _cacheIndices[i] -= startFrame;
-            }
 
+            // API call: System.arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+            // _audioCache << (totalBytesRead - startFrame)
+            System.arraycopy(_audioCache, startFrame, temp, 0, _totalBytesRead - startFrame);
             _audioCache = new short[temp.length];
             System.arraycopy(temp, 0, _audioCache, 0, _totalBytesRead - startFrame);
-
             _totalBytesRead -= startFrame;
+
+            // adjust frame values of linked list
+            for(int position = 0; position < _cacheIndices.size(); position++) {
+                _cacheIndices.set(position, _cacheIndices.get(position) - startFrame);
+            }
         }
     }
 
