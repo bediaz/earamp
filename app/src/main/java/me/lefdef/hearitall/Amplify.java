@@ -52,7 +52,7 @@ public class Amplify {
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
         _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
         _buffer = new short[inBufferSize];
-        _audioCache = new short[_buffer.length*1000];
+        _audioCache = new short[_buffer.length*200];
         _cacheIndices = new int[repeatLength];
 
         // TODO: setup timer/scheduled executor
@@ -71,7 +71,7 @@ public class Amplify {
         cacheIndex = cacheIndex >= _cacheIndices.length - 1 ? 0 : ++cacheIndex; // what did i just write? anyway it resets the cacheindex..
 
         _intervals++;
-        Log.i(TAG, String.format("refreshCacheIndices=%s, cacheIndex=%s, totalBytesRead=%s", _intervals, cacheIndex, _totalBytesRead));
+        Log.i(TAG, String.format("refreshCacheIndices=%s, cacheIndex=%s, totalBytesRead=%s, capacity=%.2f", _intervals, cacheIndex, _totalBytesRead, 100.0*(float)_totalBytesRead/_audioCache.length));
     }
 
 
@@ -136,8 +136,6 @@ public class Amplify {
         return 0;
     }
 
-
-
     public void startListeningAndPlay() {
         new AsyncTask<Void, String, Void>() {
             @Override
@@ -169,16 +167,15 @@ public class Amplify {
                     }, 0, 1000, TimeUnit.MILLISECONDS); // start immediately, run every 1000ms
                 }
 
-
                 while (_isRecording) {
+
                     bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                    System.arraycopy(_buffer, 0, _audioCache, _totalBytesRead, bytesRead);
-                    _totalBytesRead += bytesRead;
-                    //Log.i("TAG", String.format("_totalBytesRead=%s", _totalBytesRead));
                     _audioTrack.write(_buffer, 0, bytesRead);
+                    audioBufferProcessing(bytesRead);
+                    //Log.i("TAG", String.format("_totalBytesRead=%s", _totalBytesRead));
+
                 }
 
-                //
                 if(_audioCacheServiceHandle != null) {
                     _audioCacheServiceHandle.cancel(true);
                 }
@@ -203,6 +200,28 @@ public class Amplify {
                 }
             }
         }.execute();
+    }
+
+    private void audioBufferProcessing(int bytesRead) {
+        System.arraycopy(_buffer, 0, _audioCache, _totalBytesRead, bytesRead);
+
+        _totalBytesRead += bytesRead;
+        if(_totalBytesRead >= _audioCache.length * 0.80) { // if nearing 80% capacity then reset index to beginning of buffer
+            Log.i(TAG, "Trimming the audioCache");
+            int startBucket = cacheIndex == _cacheIndices.length - 1 ? 0 : cacheIndex + 1;
+            int startFrame = _cacheIndices[startBucket];
+            short[] temp = new short[_audioCache.length];
+            //arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+            System.arraycopy(_audioCache, startFrame, temp, 0, _totalBytesRead - startFrame);
+            for(int i = 0; i < _cacheIndices.length; i++) {
+                _cacheIndices[i] -= startFrame;
+            }
+
+            _audioCache = new short[temp.length];
+            System.arraycopy(temp, 0, _audioCache, 0, _totalBytesRead - startFrame);
+
+            _totalBytesRead -= startFrame;
+        }
     }
 
     //region OnRecordStatusChangeListener
