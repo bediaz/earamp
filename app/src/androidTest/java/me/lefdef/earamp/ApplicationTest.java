@@ -1,4 +1,4 @@
-package me.lefdef.hearitall;
+package me.lefdef.earamp;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -1,4 +1,4 @@
-package me.lefdef.hearitall;
+package me.lefdef.earamp;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

@@ -16,5 +16,8 @@
     <string name="action_listen_off">OFF</string>
     <string name="action_listen_on">ON</string>
     <string name="action_repeat">10</string>
+    <string name="yes">YES</string>
+    <string name="no">NO</string>
+
 
 </resources>

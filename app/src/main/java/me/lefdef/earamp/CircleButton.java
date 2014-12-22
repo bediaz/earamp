@@ -1,4 +1,4 @@
-package me.lefdef.hearitall;
+package me.lefdef.earamp;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -41,8 +41,22 @@ public class CircleButton extends ImageView {
         _label = label;
         invalidate();
     }
+
+    public String getLabel() {
+        return _label;
+    }
+
+    public int getColor() {
+        return _circlePaint.getColor();
+    }
+
     public void setColor(int color) {
         _circlePaint.setColor(color);
+        invalidate();
+    }
+
+    public void setTextColor(int color) {
+        _textPaint.setColor(color);
         invalidate();
     }
     public void setLabelSize(int size) {

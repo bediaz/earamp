@@ -1,4 +1,4 @@
-package me.lefdef.hearitall;
+package me.lefdef.earamp;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Window;
 
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
@@ -20,13 +22,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.activity_main);
 
         viewPager = (ViewPager) findViewById(R.id.pager);
-        actionBar = getActionBar();
+
         mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
 
         viewPager.setAdapter(mAdapter);
+        actionBar = getActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -67,6 +71,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
 
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if(event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            AmplifyFragment af = (AmplifyFragment)getSupportFragmentManager().findFragmentByTag("AMPLIFY_FRAGMENT");
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     //    public void sendAmplifyState(View view) {
