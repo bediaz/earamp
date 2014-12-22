@@ -19,7 +19,7 @@ public class HeadsetMonitoringService extends Service {
 
         headsetStateReceiver = new HeadsetAudioReceiver();
         final IntentFilter filter = new IntentFilter();
-        for (String action: HeadsetAudioReceiver.HEADPHONE_ACTIONS) {
+        for (String action : HeadsetAudioReceiver.HEADPHONE_ACTIONS) {
             filter.addAction(action);
         }
 

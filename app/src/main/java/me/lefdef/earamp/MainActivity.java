@@ -76,8 +76,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
-        if(event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            AmplifyFragment af = (AmplifyFragment)getSupportFragmentManager().findFragmentByTag("AMPLIFY_FRAGMENT");
+        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            AmplifyFragment af = (AmplifyFragment) getSupportFragmentManager().findFragmentByTag("AMPLIFY_FRAGMENT");
         }
         return super.onKeyDown(keyCode, event);
     }

@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Amplify {
 
+    final static Semaphore recordingLock = new Semaphore(1);
+    private static Amplify _amplify;
     //region CONSTANTS
     final String TAG = "AMPLIFY";
     final int SAMPLE_RATE = 44100; // 44100Hz is currently the only rate that is guaranteed to work on all devices, but other rates such as 22050, 16000, and 11025 may work on some devices.
@@ -34,6 +36,7 @@ public class Amplify {
     final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_MONO;
     final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
     private final ScheduledExecutorService _audioCacheService = Executors.newScheduledThreadPool(1); // create a single thread
+    public OnPlayStateChangedListener _onPlayStateChangedListener = null;
     //endregion
     private int _minInBufferSize;
     private AudioRecord _audioRecord;
@@ -48,8 +51,6 @@ public class Amplify {
     private ScheduledFuture _audioCacheServiceHandle;
     private int MAX_BUFFER;
     private boolean _isPlaying;
-
-    private static Amplify _amplify;
 
 
     private Amplify() {
@@ -70,17 +71,15 @@ public class Amplify {
     }
 
     public static Amplify getInstance() {
-        if(_amplify == null) {
-            synchronized(Amplify.class) {
-                if(_amplify == null) {
+        if (_amplify == null) {
+            synchronized (Amplify.class) {
+                if (_amplify == null) {
                     _amplify = new Amplify();
                 }
             }
         }
         return _amplify;
     }
-
-
 
     private void refreshCacheIndices() {
 
@@ -91,8 +90,6 @@ public class Amplify {
 
         //Log.i(TAG, String.format("refreshCacheIndices=%s, totalBytesRead=%s, capacity=%.2f", _intervals, _totalBytesRead, 100.0*(float)_totalBytesRead/_audioCache.length));
     }
-
-
 
     public void startRepeat() {
         new AsyncTask<Void, String, Void>() {
@@ -143,7 +140,6 @@ public class Amplify {
         }.execute();
     }
 
-
     public int getAudioRecordSessionId() {
         if (_audioRecord != null) {
             return _audioRecord.getAudioSessionId();
@@ -157,12 +153,10 @@ public class Amplify {
         }
         return 0;
     }
-    final static Semaphore recordingLock = new Semaphore(1);
-
 
     public void startRecordingToFile() {
         Log.i(TAG, "startRecordingToFile trying to acquire recordingLock");
-        if(!recordingLock.tryAcquire()) {
+        if (!recordingLock.tryAcquire()) {
             Log.e(TAG, "startRecordingToFile failed to acquire recordingLock");
             return;
         }
@@ -187,7 +181,7 @@ public class Amplify {
                     outStream = new FileOutputStream(filePath);
                     _audioRecord.startRecording();
                     _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
-                    if(_isRecording) {
+                    if (_isRecording) {
                         triggerObservers();
                     }
                     Log.i(TAG, "startRecordingToFile started recording");
@@ -225,7 +219,7 @@ public class Amplify {
 
     public void startPlayingRecording(String fileName) {
         Log.i(TAG, "startPlayingRecording trying to acquire recordingLock");
-        if(!recordingLock.tryAcquire()) {
+        if (!recordingLock.tryAcquire()) {
             Log.e(TAG, "startPlayingRecording failed to acquire recordingLock");
             return;
         }
@@ -291,7 +285,7 @@ public class Amplify {
 
     public void startListeningAndPlay() {
         Log.i(TAG, "startListeningAndPlay trying to acquire recordingLock");
-        if(!recordingLock.tryAcquire()) {
+        if (!recordingLock.tryAcquire()) {
             Log.e(TAG, "startListeningAndPlay failed to acquire recordingLock");
             return;
         }
@@ -318,7 +312,7 @@ public class Amplify {
                     _isPlaying = _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
                 }
                 _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
-                if(_isRecording) {
+                if (_isRecording) {
                     triggerObservers();
                 }
 
@@ -390,6 +384,7 @@ public class Amplify {
     public boolean isRecording() {
         return _isRecording;
     }
+
     public boolean isPlaying() {
         return _isPlaying;
     }
@@ -416,10 +411,6 @@ public class Amplify {
         _audioTrack.flush();
     }
 
-    public interface OnPlayStateChangedListener {
-        public void OnPlayStateChanged();
-    }
-
     public OnPlayStateChangedListener getOnPlayStateChangedListener() {
         return _onPlayStateChangedListener;
     }
@@ -428,12 +419,14 @@ public class Amplify {
         this._onPlayStateChangedListener = _onGameSetChangedListener;
     }
 
-    public OnPlayStateChangedListener _onPlayStateChangedListener = null;
-
     private void triggerObservers() {
-        if(_onPlayStateChangedListener != null) {
+        if (_onPlayStateChangedListener != null) {
             _onPlayStateChangedListener.OnPlayStateChanged();
         }
+    }
+
+    public interface OnPlayStateChangedListener {
+        public void OnPlayStateChanged();
     }
 
 }

@@ -2,7 +2,6 @@ package me.lefdef.earamp;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 /**
  * Created by Brigham on 12/13/2014.
@@ -139,8 +137,7 @@ public class AmplifyFragment extends Fragment {
                             .setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
 
-                }
-                else {
+                } else {
                     if (_amplify.isRecording()) {
                         stopListeningAndPlayback();
                     } else {

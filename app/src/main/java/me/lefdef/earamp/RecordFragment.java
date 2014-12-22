@@ -44,8 +44,8 @@ public class RecordFragment extends Fragment {
         _paths = new ArrayList<String>();
         File directory = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         File[] files = directory.listFiles();
-        for(File file : files) {
-            if(file.getAbsolutePath().indexOf("recording_") >= 0) {
+        for (File file : files) {
+            if (file.getAbsolutePath().indexOf("recording_") >= 0) {
                 _paths.add(file.getAbsolutePath());
             }
         }
@@ -56,7 +56,7 @@ public class RecordFragment extends Fragment {
         super.onCreate(savedInstanceState);
         getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
         _audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-        _amplify =  Amplify.getInstance();
+        _amplify = Amplify.getInstance();
 
 
     }
@@ -88,18 +88,18 @@ public class RecordFragment extends Fragment {
 
     private void populateScrollView() {
         LinearLayout recordingsFragment;
-        LayoutInflater inflater = (LayoutInflater)   _context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        recordingsFragment =  (LinearLayout) inflater.inflate(R.layout.fragment_recordings, null);
+        LayoutInflater inflater = (LayoutInflater) _context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        recordingsFragment = (LinearLayout) inflater.inflate(R.layout.fragment_recordings, null);
         recordingsFragment.setTag("recordingsFragment");
-        LinearLayout temp = (LinearLayout)_scrollView.findViewWithTag("recordingsFragment");
-        if(temp != null) {
+        LinearLayout temp = (LinearLayout) _scrollView.findViewWithTag("recordingsFragment");
+        if (temp != null) {
             recordingsFragment = temp;
             _scrollView.removeView(recordingsFragment);
         }
 
         for (String path : _paths) {
 
-            if(recordingsFragment.findViewWithTag(path) != null) {
+            if (recordingsFragment.findViewWithTag(path) != null) {
                 continue;
             }
 
@@ -123,15 +123,14 @@ public class RecordFragment extends Fragment {
                     CircleButton circleButton = (CircleButton) _scrollView.findViewWithTag(cb.getTag());
                     if (_amplify.isPlaying()) {
                         _amplify.stopPlaying();
-                        if(!_amplify.isPlaying()) { // verify action was performed
+                        if (!_amplify.isPlaying()) { // verify action was performed
                             if (circleButton != null) {
                                 circleButton.setImageResource(R.drawable.ic_action_play);
                                 circleButton.invalidate();
                                 _scrollView.invalidate();
                             }
                         }
-                    }
-                    else {
+                    } else {
                         _amplify.startPlayingRecording(cb.getLabel());
                         if (circleButton != null) {
                             circleButton.setImageResource(R.drawable.ic_action_stop);

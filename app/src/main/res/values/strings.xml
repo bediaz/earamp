@@ -18,6 +18,7 @@
     <string name="action_repeat">10</string>
     <string name="yes">YES</string>
     <string name="no">NO</string>
+    <string name="action_recording">Recording</string>
 
 
 </resources>

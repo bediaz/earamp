@@ -27,6 +27,7 @@ public class CircleButton extends ImageView {
         super(context);
         initializeComponents(context, null);
     }
+
     public CircleButton(Context context, AttributeSet attrs) {
         super(context, attrs);
         initializeComponents(context, attrs);
@@ -37,13 +38,13 @@ public class CircleButton extends ImageView {
         initializeComponents(context, attrs);
     }
 
+    public String getLabel() {
+        return _label;
+    }
+
     public void setLabel(String label) {
         _label = label;
         invalidate();
-    }
-
-    public String getLabel() {
-        return _label;
     }
 
     public int getColor() {
@@ -59,6 +60,7 @@ public class CircleButton extends ImageView {
         _textPaint.setColor(color);
         invalidate();
     }
+
     public void setLabelSize(int size) {
         _label_size = size;
         invalidate();
@@ -72,7 +74,7 @@ public class CircleButton extends ImageView {
         int circleColor = Color.parseColor("#F50057"); // pink
         _label_size = 20; //def value
 
-        if(attrs != null) {
+        if (attrs != null) {
             final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.CircleButton);
             circleColor = typedArray.getColor(R.styleable.CircleButton_cb_color, circleColor);
             _label = typedArray.getString(R.styleable.CircleButton_cb_label);
@@ -93,8 +95,8 @@ public class CircleButton extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawCircle(_centerX, _centerY, _radius, _circlePaint);
-        if(!_label.equals("")) {
-            canvas.drawText(_label, _centerX, (int)(1.8 * _radius), _textPaint);
+        if (!_label.equals("")) {
+            canvas.drawText(_label, _centerX, (int) (1.8 * _radius), _textPaint);
         }
         super.onDraw(canvas);
     }
