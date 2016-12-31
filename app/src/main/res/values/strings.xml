@@ -22,6 +22,13 @@
     <string name="volume_bar">volume bar</string>
     <string name="rec_name">rec_name</string>
     <string name="rec_length">rec_length</string>
+    <string name="redirect">Redirect</string>
+    <string name="record">Record</string>
+    <string name="equalizer">Equalizer</string>
+    <string name="settings">Settings</string>
+    <string name="communicate">Communicate</string>
+    <string name="earamp">EarAmp</string>
+    <string name="email">brigham.diaz@gmail.com</string>
 
 
 </resources>

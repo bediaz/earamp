@@ -8,6 +8,6 @@
     <item
         android:id="@+id/action_record_and_play"
         android:icon="@drawable/loudspeaker"
-        android:showAsAction="always|withText"
+        android:showAsAction="ifRoom|withText"
         android:title="@string/action_record_and_play" />
 </menu>
