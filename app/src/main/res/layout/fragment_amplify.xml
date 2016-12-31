@@ -42,7 +42,7 @@
         android:layout_width="240dp"
         android:layout_height="wrap_content"
         android:max="100"
-        android:layout_gravity="center|left"
+        android:layout_gravity="center|start"
         android:layout_below="@+id/off_on_button"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="122dp" />
@@ -55,7 +55,9 @@
         android:scaleType="fitCenter"
         android:layout_toStartOf="@+id/volume_bar"
         android:layout_alignBottom="@+id/volume_bar"
-        android:layout_alignTop="@+id/volume_bar" />
+        android:layout_alignTop="@+id/volume_bar"
+        android:layout_toLeftOf="@+id/volume_bar"
+        android:contentDescription="@string/volume_bar"/>
 
 
     <me.lefdef.earamp.VisualizerView

@@ -19,6 +19,9 @@
     <string name="yes">YES</string>
     <string name="no">NO</string>
     <string name="action_recording">Recording</string>
+    <string name="volume_bar">volume bar</string>
+    <string name="rec_name">rec_name</string>
+    <string name="rec_length">rec_length</string>
 
 
 </resources>

@@ -30,9 +30,10 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/icon"
         android:layout_toRightOf="@id/icon"
-        android:textSize="17dp"
+        android:layout_toEndOf="@id/icon"
+        android:textSize="17sp"
         android:textStyle="bold"
-        android:text="rec_name"/>
+        android:text="@string/rec_name"/>
 
     <!--Recording time length-->
     <TextView
@@ -42,6 +43,7 @@
         android:layout_below="@id/rec_name"
         android:layout_marginTop="1dp"
         android:layout_toRightOf="@id/icon"
-        android:textSize="15dp"
-        android:text="rec_length"/>
+        android:layout_toEndOf="@id/icon"
+        android:textSize="15sp"
+        android:text="@string/rec_length"/>
 </RelativeLayout>
