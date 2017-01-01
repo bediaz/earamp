@@ -6,13 +6,11 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -26,45 +24,44 @@ import java.util.concurrent.TimeUnit;
 
 
 public class Amplify {
+    private static final String TAG = "AMPLIFY";
+    private static final Semaphore recordingLock = new Semaphore(1);
 
-    final static Semaphore recordingLock = new Semaphore(1);
-    private static Amplify _amplify;
+    private static Amplify amplify;
     //region CONSTANTS
-    final String TAG = "AMPLIFY";
-    final int SAMPLE_RATE = 44100; // 44100Hz is currently the only rate that is guaranteed to work on all devices, but other rates such as 22050, 16000, and 11025 may work on some devices.
+    private final int SAMPLE_RATE = 44100; // 44100Hz is currently the only rate that is guaranteed to work on all devices, but other rates such as 22050, 16000, and 11025 may work on some devices.
     // TODO: test CHANNEL_IN_STEREO
-    final int CHANNEL_CONFIG_IN = AudioFormat.CHANNEL_IN_MONO;
-    final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_MONO;
-    final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
-    private final ScheduledExecutorService _audioCacheService = Executors.newScheduledThreadPool(1); // create a single thread
-    public OnPlayStateChangedListener _onPlayStateChangedListener = null;
+    private final int CHANNEL_CONFIG_IN = AudioFormat.CHANNEL_IN_MONO;
+    private final int CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_MONO;
+    private final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT; // Guaranteed to be supported by devices. 8BIT is not
+    private final ScheduledExecutorService audioCacheServiceoCacheService = Executors.newScheduledThreadPool(1); // create a single thread
+    private OnPlayStateChangedListener onPlayStateChangedListener = null;
     //endregion
-    private int _minInBufferSize;
-    private AudioRecord _audioRecord;
-    private AudioTrack _audioTrack;
-    private short[] _buffer;
-    private short[] _audioCache;
+    private int minInBufferSize;
+    private AudioRecord audioRecord;
+    private AudioTrack audioTrack;
+    private short[] buffer;
+    private short[] audioCache;
     private LinkedList<Integer> _cacheIndices;
-    private boolean _isRecording;
+    private boolean isRecording;
     // cache variables
     private int repeatLength = 10; // seconds to keep of audio cache
-    private int _totalBytesRead = 0;
+    private int totalBytesRead = 0;
     private ScheduledFuture _audioCacheServiceHandle;
     private int MAX_BUFFER;
-    private boolean _isPlaying;
-
+    private boolean isPlaying;
 
     private Amplify() {
-        _minInBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT);
-        _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT, _minInBufferSize);
+        minInBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT);
+        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT, minInBufferSize);
 
         // TODO: remove blocking on play
         int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
 
-        _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AudioFormat.ENCODING_PCM_16BIT, outBufferSize, AudioTrack.MODE_STREAM);
-        _buffer = new short[_minInBufferSize];
-        _audioCache = new short[outBufferSize * 500];
-        MAX_BUFFER = (int) (_audioCache.length * 0.80);
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AudioFormat.ENCODING_PCM_16BIT, outBufferSize, AudioTrack.MODE_STREAM);
+        buffer = new short[minInBufferSize];
+        audioCache = new short[outBufferSize * 500];
+        MAX_BUFFER = (int) (audioCache.length * 0.80);
 
         _cacheIndices = new LinkedList<Integer>();
 
@@ -72,14 +69,14 @@ public class Amplify {
     }
 
     public static Amplify getInstance() {
-        if (_amplify == null) {
+        if (amplify == null) {
             synchronized (Amplify.class) {
-                if (_amplify == null) {
-                    _amplify = new Amplify();
+                if (amplify == null) {
+                    amplify = new Amplify();
                 }
             }
         }
-        return _amplify;
+        return amplify;
     }
 
     private void refreshCacheIndices() {
@@ -87,16 +84,16 @@ public class Amplify {
         while (_cacheIndices.size() >= repeatLength && _cacheIndices.size() > 0) {
             _cacheIndices.removeFirst();
         }
-        _cacheIndices.addLast(_totalBytesRead);
+        _cacheIndices.addLast(totalBytesRead);
 
-        //Log.i(TAG, String.format("refreshCacheIndices=%s, totalBytesRead=%s, capacity=%.2f", _intervals, _totalBytesRead, 100.0*(float)_totalBytesRead/_audioCache.length));
+        //Log.i(TAG, String.format("refreshCacheIndices=%s, totalBytesRead=%s, capacity=%.2f", _intervals, totalBytesRead, 100.0*(float)totalBytesRead/audioCache.length));
     }
 
     public void startRepeat() {
         new AsyncTask<Void, String, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                if (_totalBytesRead == 0) {
+                if (totalBytesRead == 0) {
                     return null;
                 }
                 try {
@@ -107,23 +104,23 @@ public class Amplify {
 
                 int startFrame = _cacheIndices.isEmpty() ? 0 : _cacheIndices.getFirst();
 
-                if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-                    _audioTrack.play();
-                    _isPlaying = _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
-                    //Log.i(TAG, String.format("audioTrack repeat isPlaying=%b", _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING));
+                if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
+                    audioTrack.play();
+                    isPlaying = audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+                    //Log.i(TAG, String.format("audioTrack repeat isPlaying=%b", audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING));
                 }
 
-                //Log.i(TAG, String.format("repeat(): refreshCacheIndices=%d, startFrame=%d, totalBytesRead=%d", _intervals, startFrame, _totalBytesRead));
-                //_audioTrack.setNotificationMarkerPosition(_audioTrack.getPlaybackHeadPosition() + (duration * sampleRate));
-                _audioTrack.setNotificationMarkerPosition(_totalBytesRead - 1);
-                //Log.i(TAG, String.format("repeat(): setNotificationMarkerPosition=%d", _totalBytesRead - 1));
-                _audioTrack.write(_audioCache, startFrame, _totalBytesRead - startFrame - 1);
-                //Log.i(TAG, String.format("write: _audioCacheSize=%d, begin=%d, end=%d", _audioCache.length, startFrame, _totalBytesRead - startFrame - 1));
+                //Log.i(TAG, String.format("repeat(): refreshCacheIndices=%d, startFrame=%d, totalBytesRead=%d", _intervals, startFrame, totalBytesRead));
+                //audioTrack.setNotificationMarkerPosition(audioTrack.getPlaybackHeadPosition() + (duration * sampleRate));
+                audioTrack.setNotificationMarkerPosition(totalBytesRead - 1);
+                //Log.i(TAG, String.format("repeat(): setNotificationMarkerPosition=%d", totalBytesRead - 1));
+                audioTrack.write(audioCache, startFrame, totalBytesRead - startFrame - 1);
+                //Log.i(TAG, String.format("write: _audioCacheSize=%d, begin=%d, end=%d", audioCache.length, startFrame, totalBytesRead - startFrame - 1));
 
-                _audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+                audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
                     @Override
                     public void onMarkerReached(AudioTrack track) {
-                        //Log.i(TAG, String.format("repeat playback done. isPlaying=%s, playbackPosition=%d",_audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING, _audioTrack.getPlaybackHeadPosition()));
+                        //Log.i(TAG, String.format("repeat playback done. isPlaying=%s, playbackPosition=%d",audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING, audioTrack.getPlaybackHeadPosition()));
                     }
 
                     @Override
@@ -142,17 +139,15 @@ public class Amplify {
     }
 
     public int getAudioRecordSessionId() {
-        if (_audioRecord != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                return _audioRecord.getAudioSessionId();
-            }
+        if (audioRecord != null) {
+            return audioRecord.getAudioSessionId();
         }
         return 0;
     }
 
     public int getAudioTrackSessionId() {
-        if (_audioTrack != null) {
-            return _audioTrack.getAudioSessionId();
+        if (audioTrack != null) {
+            return audioTrack.getAudioSessionId();
         }
         return 0;
     }
@@ -168,7 +163,7 @@ public class Amplify {
             @Override
             protected Void doInBackground(Void... voids) {
 
-                if (_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                     return null;
                 }
 
@@ -179,12 +174,10 @@ public class Amplify {
                 String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "recording_" + strDate + ".pcm";
                 FileOutputStream outStream = null;
                 try {
-                    // file.createNewFile();
-
                     outStream = new FileOutputStream(filePath);
-                    _audioRecord.startRecording();
-                    _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
-                    if (_isRecording) {
+                    audioRecord.startRecording();
+                    isRecording = AudioRecord.RECORDSTATE_RECORDING == audioRecord.getRecordingState();
+                    if (isRecording) {
                         triggerObservers();
                     }
                     Log.i(TAG, "startRecordingToFile started recording");
@@ -193,24 +186,28 @@ public class Amplify {
                     e.printStackTrace();
                 }
 
-                byte[] buffer = new byte[_minInBufferSize];
-                while (_isRecording) {
+                byte[] buffer = new byte[minInBufferSize];
+                while (isRecording) {
 
-                    int bytesRead = _audioRecord.read(buffer, 0, buffer.length);
+                    int bytesRead = audioRecord.read(buffer, 0, buffer.length);
 
                     try {
-                        outStream.write(buffer, 0, bytesRead);
+                        if (outStream != null) {
+                            outStream.write(buffer, 0, bytesRead);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
                 try {
-                    outStream.close(); // save file
+                    if (outStream != null) {
+                        outStream.close(); // save file
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                _audioRecord.stop();
+                audioRecord.stop();
                 recordingLock.release();
                 Log.i(TAG, "startRecordingToFile released recordingLock");
 
@@ -242,17 +239,17 @@ public class Amplify {
                 }
 
                 byte[] byteData = new byte[(int) file.length()];
-                FileInputStream in = null;
+                FileInputStream in;
                 try {
                     in = new FileInputStream(file);
 
                     int totalBytesRead = 0;
                     int bytesRead = 0;
                     int size = (int) file.length();
-                    _audioTrack.play();
-                    _isPlaying = _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+                    audioTrack.play();
+                    isPlaying = audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
 
-                    while (_isPlaying && totalBytesRead < size) {
+                    while (isPlaying && totalBytesRead < size) {
                         try {
                             bytesRead = in.read(byteData, 0, byteData.length);
                         } catch (IOException e) {
@@ -260,7 +257,7 @@ public class Amplify {
                         }
 
                         if (bytesRead != -1) {
-                            _audioTrack.write(byteData, 0, bytesRead);
+                            audioTrack.write(byteData, 0, bytesRead);
                             totalBytesRead += bytesRead;
                         } else {
                             break;
@@ -268,15 +265,13 @@ public class Amplify {
                     }
 
                     in.close();
-                    _audioTrack.pause();
-                    _audioTrack.flush();
+                    audioTrack.pause();
+                    audioTrack.flush();
                     Log.i(TAG, "done playing");
 
                     recordingLock.release();
                     Log.i(TAG, "startPlayingRecording released recordingLock");
 
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -297,32 +292,32 @@ public class Amplify {
             protected Void doInBackground(Void... voids) {
 
 
-                if (_audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                     // publishProgress("AudioRecord Failed to Initialize...");
                     // Log.i(TAG, "AudioRecord Failed to Initialize...");
                     return null;
                 }
 
                 int outBufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT);
-                _audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
+                audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT, outBufferSize, AudioTrack.MODE_STREAM);
 
-                _audioRecord.startRecording();
+                audioRecord.startRecording();
 
                 Log.i(TAG, "startListeningAndPlay started recording");
 
-                if (_audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-                    _audioTrack.play();
-                    _isPlaying = _audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+                if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
+                    audioTrack.play();
+                    isPlaying = audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
                 }
-                _isRecording = AudioRecord.RECORDSTATE_RECORDING == _audioRecord.getRecordingState();
-                if (_isRecording) {
+                isRecording = AudioRecord.RECORDSTATE_RECORDING == audioRecord.getRecordingState();
+                if (isRecording) {
                     triggerObservers();
                 }
 
                 int bytesRead;
 
-                if (_isRecording) { // call once
-                    _audioCacheServiceHandle = _audioCacheService.scheduleAtFixedRate(new Runnable() {
+                if (isRecording) { // call once
+                    _audioCacheServiceHandle = audioCacheServiceoCacheService.scheduleAtFixedRate(new Runnable() {
                         @Override
                         public void run() {
                             refreshCacheIndices();
@@ -330,26 +325,26 @@ public class Amplify {
                     }, 0, 1000, TimeUnit.MILLISECONDS); // start immediately, run every 1000ms
                 }
 
-                while (_isRecording) {
+                while (isRecording) {
 
-                    bytesRead = _audioRecord.read(_buffer, 0, _buffer.length);
-                    _audioTrack.write(_buffer, 0, bytesRead);
+                    bytesRead = audioRecord.read(buffer, 0, buffer.length);
+                    audioTrack.write(buffer, 0, bytesRead);
                     audioBufferProcessing(bytesRead);
-                    //Log.i("TAG", String.format("_totalBytesRead=%s", _totalBytesRead));
+                    //Log.i("TAG", String.format("totalBytesRead=%s", totalBytesRead));
 
                 }
 
                 if (_audioCacheServiceHandle != null) {
                     _audioCacheServiceHandle.cancel(true);
                 }
-                _audioRecord.stop();
-                _audioTrack.pause();
-                _audioTrack.flush();
+                audioRecord.stop();
+                audioTrack.pause();
+                audioTrack.flush();
                 Log.i(TAG, "startListeningAndPlay stopped recording");
                 recordingLock.release();
                 Log.i(TAG, "startListeningAndPlay released recordingLock");
 
-                //Log.i(TAG, String.format("isRecording=%b, audioCacheService isTerminated=%b", _isRecording, _audioCacheService.isTerminated()));
+                //Log.i(TAG, String.format("isRecording=%b, audioCacheService isTerminated=%b", isRecording, audioCacheServiceoCacheService.isTerminated()));
 
                 return null;
             }
@@ -362,20 +357,20 @@ public class Amplify {
     }
 
     private void audioBufferProcessing(int bytesRead) {
-        System.arraycopy(_buffer, 0, _audioCache, _totalBytesRead, bytesRead);
+        System.arraycopy(buffer, 0, audioCache, totalBytesRead, bytesRead);
 
-        _totalBytesRead += bytesRead;
-        if (_totalBytesRead >= MAX_BUFFER) { // if MAX_BUFFER hit then reset index to beginning of buffer
+        totalBytesRead += bytesRead;
+        if (totalBytesRead >= MAX_BUFFER) { // if MAX_BUFFER hit then reset index to beginning of buffer
             //Log.i(TAG, "Trimming the audioCache");
             int startFrame = _cacheIndices.isEmpty() ? 0 : _cacheIndices.getFirst();
-            short[] temp = new short[_audioCache.length];
+            short[] temp = new short[audioCache.length];
 
             // API call: System.arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-            // _audioCache << (totalBytesRead - startFrame)
-            System.arraycopy(_audioCache, startFrame, temp, 0, _totalBytesRead - startFrame);
-            _audioCache = new short[temp.length];
-            System.arraycopy(temp, 0, _audioCache, 0, _totalBytesRead - startFrame);
-            _totalBytesRead -= startFrame;
+            // audioCache << (totalBytesRead - startFrame)
+            System.arraycopy(audioCache, startFrame, temp, 0, totalBytesRead - startFrame);
+            audioCache = new short[temp.length];
+            System.arraycopy(temp, 0, audioCache, 0, totalBytesRead - startFrame);
+            totalBytesRead -= startFrame;
 
             // adjust frame values of linked list
             for (int position = 0; position < _cacheIndices.size(); position++) {
@@ -385,46 +380,46 @@ public class Amplify {
     }
 
     public boolean isRecording() {
-        return _isRecording;
+        return isRecording;
     }
 
     public boolean isPlaying() {
-        return _isPlaying;
+        return isPlaying;
     }
 
     public void stopRecording() {
-        _isRecording = false;
+        isRecording = false;
         triggerObservers();
     }
 
     public void stopPlaying() {
-        _isPlaying = false;
+        isPlaying = false;
         triggerObservers();
     }
 
     public void stopListeningAndPlay() {
-        _isRecording = false;
-        _isPlaying = false;
+        isRecording = false;
+        isPlaying = false;
         triggerObservers();
     }
 
     public void killAll() {
-        _audioRecord.stop();
-        _audioTrack.pause();
-        _audioTrack.flush();
+        audioRecord.stop();
+        audioTrack.pause();
+        audioTrack.flush();
     }
 
     public OnPlayStateChangedListener getOnPlayStateChangedListener() {
-        return _onPlayStateChangedListener;
+        return onPlayStateChangedListener;
     }
 
     public void setOnPlayStateChangedListener(OnPlayStateChangedListener _onGameSetChangedListener) {
-        this._onPlayStateChangedListener = _onGameSetChangedListener;
+        this.onPlayStateChangedListener = _onGameSetChangedListener;
     }
 
     private void triggerObservers() {
-        if (_onPlayStateChangedListener != null) {
-            _onPlayStateChangedListener.OnPlayStateChanged();
+        if (onPlayStateChangedListener != null) {
+            onPlayStateChangedListener.OnPlayStateChanged();
         }
     }
 

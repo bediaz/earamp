@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,17 +24,16 @@ import java.util.List;
  */
 public class RecordFragment extends Fragment {
 
-    final static String TAG = "RECORD_FRAGMENT";
+    static final String TAG = "RECORD_FRAGMENT";
 
-    private Amplify _amplify;
-    private AudioManager _audioManager;
+    private Amplify amplify;
+    private AudioManager audioManager;
 
-    private LinearLayout _rootLayout;
-    private CircleButton _recButton;
-    private CircleButton _stopButton;
-    private List<String> _paths;
-    private Context _context;
-    private ScrollView _scrollView;
+    private CircleButton btnRecord;
+    private CircleButton btnStop;
+    private List<String> paths;
+    private Context context;
+    private ScrollView scrollView;
 
     public RecordFragment() {
         scanFiles();
@@ -41,13 +41,13 @@ public class RecordFragment extends Fragment {
     }
 
     private void scanFiles() {
-        _paths = new ArrayList<String>();
+        paths = new ArrayList<String>();
         File directory = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         File[] files = directory.listFiles();
         if(files != null){
             for (File file : files) {
                 if (file.getAbsolutePath().contains("recording_")) {
-                    _paths.add(file.getAbsolutePath());
+                    paths.add(file.getAbsolutePath());
                 }
             }
         }
@@ -57,8 +57,8 @@ public class RecordFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        _audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-        _amplify = Amplify.getInstance();
+        audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+        amplify = Amplify.getInstance();
 
 
     }
@@ -66,40 +66,40 @@ public class RecordFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        _context = container.getContext();
-        _rootLayout = new LinearLayout(getActivity());
-        _rootLayout.setOrientation(LinearLayout.VERTICAL);
-        _rootLayout.setGravity(LinearLayout.HORIZONTAL);
+        context = container.getContext();
+        final LinearLayout rootLayout = new LinearLayout(getActivity());
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
+        rootLayout.setGravity(LinearLayout.HORIZONTAL);
 
 
         LinearLayout.LayoutParams scrollViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 1);
-        _scrollView = new ScrollView(getActivity());
+        scrollView = new ScrollView(getActivity());
         populateScrollView(); //new ScrollView(getActivity());
-        _rootLayout.addView(_scrollView, scrollViewLayoutParams);
+        rootLayout.addView(scrollView, scrollViewLayoutParams);
 
 
         LinearLayout recordActionFragment = (LinearLayout) inflater.inflate(R.layout.fragment_record_action, container, false);
         LinearLayout.LayoutParams recActionLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 5);
 
-        _rootLayout.addView(recordActionFragment, recActionLayoutParams);
+        rootLayout.addView(recordActionFragment, recActionLayoutParams);
 
-        _recButton = (CircleButton) recordActionFragment.findViewById(R.id.recButton);
-        _stopButton = (CircleButton) recordActionFragment.findViewById(R.id.stopButton);
-        return _rootLayout;
+        btnRecord = (CircleButton) recordActionFragment.findViewById(R.id.recButton);
+        btnStop = (CircleButton) recordActionFragment.findViewById(R.id.stopButton);
+        return rootLayout;
     }
 
     private void populateScrollView() {
         LinearLayout recordingsFragment;
-        LayoutInflater inflater = (LayoutInflater) _context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         recordingsFragment = (LinearLayout) inflater.inflate(R.layout.fragment_recordings, null);
         recordingsFragment.setTag("recordingsFragment");
-        LinearLayout temp = (LinearLayout) _scrollView.findViewWithTag("recordingsFragment");
+        LinearLayout temp = (LinearLayout) scrollView.findViewWithTag("recordingsFragment");
         if (temp != null) {
             recordingsFragment = temp;
-            _scrollView.removeView(recordingsFragment);
+            scrollView.removeView(recordingsFragment);
         }
 
-        for (String path : _paths) {
+        for (String path : paths) {
 
             if (recordingsFragment.findViewWithTag(path) != null) {
                 continue;
@@ -116,28 +116,27 @@ public class RecordFragment extends Fragment {
             cb.setImageResource(R.drawable.ic_action_play);
             cb.setLabel(path);
             cb.setLabelSize(1);
-            cb.setTextColor(getResources().getColor(R.color.light_gray));
-
+            cb.setTextColor(ContextCompat.getColor(context, R.color.light_gray));
             cb.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     CircleButton cb = (CircleButton) v;
-                    CircleButton circleButton = (CircleButton) _scrollView.findViewWithTag(cb.getTag());
-                    if (_amplify.isPlaying()) {
-                        _amplify.stopPlaying();
-                        if (!_amplify.isPlaying()) { // verify action was performed
+                    CircleButton circleButton = (CircleButton) scrollView.findViewWithTag(cb.getTag());
+                    if (amplify.isPlaying()) {
+                        amplify.stopPlaying();
+                        if (!amplify.isPlaying()) { // verify action was performed
                             if (circleButton != null) {
                                 circleButton.setImageResource(R.drawable.ic_action_play);
                                 circleButton.invalidate();
-                                _scrollView.invalidate();
+                                scrollView.invalidate();
                             }
                         }
                     } else {
-                        _amplify.startPlayingRecording(cb.getLabel());
+                        amplify.startPlayingRecording(cb.getLabel());
                         if (circleButton != null) {
                             circleButton.setImageResource(R.drawable.ic_action_stop);
                             circleButton.invalidate();
-                            _scrollView.invalidate();
+                            scrollView.invalidate();
                         }
 
                     }
@@ -148,35 +147,35 @@ public class RecordFragment extends Fragment {
             recordingsFragment.addView(rowItem);
         }
 
-        _scrollView.addView(recordingsFragment);
-        _scrollView.setVerticalScrollBarEnabled(false);
-        _scrollView.setHorizontalScrollBarEnabled(false);
+        scrollView.addView(recordingsFragment);
+        scrollView.setVerticalScrollBarEnabled(false);
+        scrollView.setHorizontalScrollBarEnabled(false);
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        _recButton.setOnClickListener(new View.OnClickListener() {
+        btnRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // TODO: start recording
-                _amplify.startRecordingToFile();
-                _recButton.setImageResource(R.drawable.ic_action_record_inactive);
-                _stopButton.setImageResource(R.drawable.ic_action_stop_circle);
-                _recButton.invalidate();
-                _stopButton.invalidate();
+                amplify.startRecordingToFile();
+                btnRecord.setImageResource(R.drawable.ic_action_record_inactive);
+                btnStop.setImageResource(R.drawable.ic_action_stop_circle);
+                btnRecord.invalidate();
+                btnStop.invalidate();
             }
         });
-        _stopButton.setOnClickListener(new View.OnClickListener() {
+        btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // TODO: stop recording
-                _amplify.stopRecording();
-                _recButton.setImageResource(R.drawable.ic_action_record);
-                _stopButton.setImageResource(R.drawable.ic_action_stop_circle_inactive);
-                _recButton.invalidate();
-                _stopButton.invalidate();
+                amplify.stopRecording();
+                btnRecord.setImageResource(R.drawable.ic_action_record);
+                btnStop.setImageResource(R.drawable.ic_action_stop_circle_inactive);
+                btnRecord.invalidate();
+                btnStop.invalidate();
 
                 scanFiles();
                 populateScrollView();

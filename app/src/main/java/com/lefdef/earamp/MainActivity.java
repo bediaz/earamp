@@ -1,29 +1,20 @@
 package com.lefdef.earamp;
 
-import android.Manifest;
-import android.app.ActionBar;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
-
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
-    final String TAG = "MAIN_ACTIVITY";
-    private TabsPagerAdapter mAdapter;
-    private ActionBar actionBar;
+    private static final String TAG = "MAIN_ACTIVITY";
     private TabLayout tabLayout;
     private String[] tabTitles = {"Amplify", "Record"};
     private int[] tabIcons = {
@@ -47,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(viewPager);
         setupTabIcons();
 
-        mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
+        TabsPagerAdapter mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
 
         viewPager.setAdapter(mAdapter);
     }

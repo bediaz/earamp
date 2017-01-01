@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.audiofx.Visualizer;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -27,33 +28,30 @@ import android.widget.SeekBar;
  */
 public class AmplifyFragment extends Fragment {
 
-    final static String TAG = "AMPLIFY_FRAGMENT";
+    static final String TAG = "AMPLIFY_FRAGMENT";
     public static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
     public static final int MY_PERMISSIONS_REQUEST_MODIFY_AUDIO_SETTINGS = 1;
     public static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
     public static final int MY_PERMISSIONS_REQUEST_BLUETOOTH = 3;
     // region XML UI
 
-    private CircleButton _off_onButton;
-    private CircleButton _repeatButton;
-    private SeekBar _volSeekBar;
+    private CircleButton btnOnOff;
+    private CircleButton btnRepeat;
+    private SeekBar seekBarVolume;
 
-    //endregion
+    private Amplify amplify;
+    private AudioManager audioManager;
+    private Visualizer visualizer;
+    private VisualizerView visualizerView;
 
-    private Amplify _amplify;
-    private AudioManager _audioManager;
-    private Visualizer _visualizer;
-    private VisualizerView _visualizerView;
-    private RelativeLayout _rootView;
-    private Context _context;
+    private HeadsetAudioReceiver audioStreamReceiver;
+    private IntentFilter audioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+    private HeadSetIntentReceiver headSetIntentReceiver = new HeadSetIntentReceiver();
 
-    private HeadsetAudioReceiver _audioStreamReceiver;
-    private IntentFilter _audioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-    private HeadSetIntentReceiver _headSetIntentReceiver = new HeadSetIntentReceiver();
-
-    private int _volumeLevel;
-    private boolean _headsetConnected = false;
-    private boolean _bluetoothConnected = false;
+    private Context context;
+    private int volumeLevel;
+    private boolean headsetConnected = false;
+    private boolean bluetoothConnected = false;
 
 
     private void requestPermissions() {
@@ -76,14 +74,12 @@ public class AmplifyFragment extends Fragment {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_RECORD_AUDIO: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                     setupVisualizerFxAndUI();
 
                 } else {
@@ -100,7 +96,7 @@ public class AmplifyFragment extends Fragment {
     }
     private void onMessageReceived(int state) {
         if (state != 1) {
-            _amplify.stopListeningAndPlay();
+            amplify.stopListeningAndPlay();
         }
     }
 
@@ -109,30 +105,30 @@ public class AmplifyFragment extends Fragment {
     public void onResume() {
         super.onResume();
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-        getActivity().registerReceiver(_headSetIntentReceiver, filter);
+        getActivity().registerReceiver(headSetIntentReceiver, filter);
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        _context = container.getContext();
+        context = container.getContext();
         // layout stuff
-        _rootView = (RelativeLayout) inflater.inflate(R.layout.fragment_amplify, container, false);
+        final RelativeLayout rootView = (RelativeLayout) inflater.inflate(R.layout.fragment_amplify, container, false);
 
-        _off_onButton = (CircleButton) _rootView.findViewById(R.id.off_on_button);
-        _repeatButton = (CircleButton) _rootView.findViewById(R.id.repeat_button);
-        _volSeekBar = (SeekBar) _rootView.findViewById(R.id.volume_bar);
+        btnOnOff = (CircleButton) rootView.findViewById(R.id.off_on_button);
+        btnRepeat = (CircleButton) rootView.findViewById(R.id.repeat_button);
+        seekBarVolume = (SeekBar) rootView.findViewById(R.id.volume_bar);
 
         // audio setup
         //getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        //_audioStreamReceiver = new HeadsetAudioReceiver();
-        _audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+        //audioStreamReceiver = new HeadsetAudioReceiver();
+        audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
         // Request audio focus for playback
-        int result = _audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        int result = audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
-        _amplify = Amplify.getInstance();
-        _amplify.setOnPlayStateChangedListener(new Amplify.OnPlayStateChangedListener() {
+        amplify = Amplify.getInstance();
+        amplify.setOnPlayStateChangedListener(new Amplify.OnPlayStateChangedListener() {
             @Override
             public void OnPlayStateChanged() {
                 getActivity().runOnUiThread(new Runnable() {
@@ -143,14 +139,14 @@ public class AmplifyFragment extends Fragment {
                 });
             }
         });
-        int max_volume = _audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        _volumeLevel = _audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        _volSeekBar.setMax(max_volume);
+        int max_volume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        volumeLevel = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        seekBarVolume.setMax(max_volume);
         Log.i(TAG, "max_volume=" + max_volume);
-        _volSeekBar.setProgress(_volumeLevel);
-        Log.i(TAG, "_volumeLevel=" + _volumeLevel);
+        seekBarVolume.setProgress(volumeLevel);
+        Log.i(TAG, "volumeLevel=" + volumeLevel);
 
-        _visualizerView = (VisualizerView) _rootView.findViewById(R.id.visualizerView);
+        visualizerView = (VisualizerView) rootView.findViewById(R.id.visualizerView);
 
         requestPermissions();
 
@@ -158,22 +154,22 @@ public class AmplifyFragment extends Fragment {
             setupVisualizerFxAndUI();
         }
 
-        _visualizerView.refresh();
+        visualizerView.refresh();
 
-        return _rootView;
+        return rootView;
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        _off_onButton.setSoundEffectsEnabled(false);
+        btnOnOff.setSoundEffectsEnabled(false);
 
-        _off_onButton.setOnClickListener(new View.OnClickListener() {
+        btnOnOff.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) { /* warning */
-                if (_headsetConnected == false && !_amplify.isRecording()) {
+                if (!headsetConnected && !amplify.isRecording()) {
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Warning")
                             .setMessage("No headset was detected. This may cause a very loud feedback loop. Are you sure you want to proceed?")
@@ -191,7 +187,7 @@ public class AmplifyFragment extends Fragment {
                             .show();
 
                 } else {
-                    if (_amplify.isRecording()) {
+                    if (amplify.isRecording()) {
                         stopListeningAndPlayback();
                     } else {
                         startListeningAndPlayback();
@@ -201,19 +197,19 @@ public class AmplifyFragment extends Fragment {
             }
         });
 
-        _repeatButton.setOnClickListener(new View.OnClickListener() {
+        btnRepeat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 stopListeningAndPlayback();
-                _amplify.startRepeat();
+                amplify.startRepeat();
                 setupVisualizerFxAndUI();
             }
         });
 
-        _volSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                _audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
             }
 
             @Override
@@ -230,44 +226,41 @@ public class AmplifyFragment extends Fragment {
 
 
     public void refreshView() {
-        if (_amplify.isRecording()) {
-            _off_onButton.setImageResource(R.drawable.ic_action_listen_on);
-            //_off_onButton.setLabel(getResources().getString(R.string.action_listen_on));
-            _off_onButton.setColor(getResources().getColor(R.color.light_green));
-            _off_onButton.invalidate();
+        if (amplify.isRecording()) {
+            btnOnOff.setImageResource(R.drawable.ic_action_listen_on);
+            btnOnOff.setColor(ContextCompat.getColor(context, R.color.light_green));
+            btnOnOff.invalidate();
         } else {
-            _off_onButton.setImageResource(R.drawable.ic_action_listen_off);
-            //_off_onButton.setLabel(getResources().getString(R.string.action_listen_off));
-            _off_onButton.setColor(getResources().getColor(R.color.blue_gray));
-            _off_onButton.invalidate();
+            btnOnOff.setImageResource(R.drawable.ic_action_listen_off);
+            btnOnOff.setColor(ContextCompat.getColor(context, R.color.blue_gray));
+            btnOnOff.invalidate();
         }
-
     }
 
     private void stopListeningAndPlayback() {
-        _amplify.stopListeningAndPlay();
+        amplify.stopListeningAndPlay();
         Log.i(TAG, "stopListeningAndPlayback");
 
     }
 
     private void startListeningAndPlayback() {
         Log.i(TAG, "startListeningAndPlayback");
-        _amplify.startListeningAndPlay();
+        amplify.startListeningAndPlay();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         // Stop listening for button presses
-        _amplify.stopListeningAndPlay();
-        _visualizer.release();
-        getActivity().unregisterReceiver(_headSetIntentReceiver);
+        amplify.stopListeningAndPlay();
+        visualizer.release();
+        getActivity().unregisterReceiver(headSetIntentReceiver);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        _amplify.stopListeningAndPlay();
+        amplify.stopListeningAndPlay();
     }
 
 
@@ -278,24 +271,24 @@ public class AmplifyFragment extends Fragment {
         }
 
             // Create the Visualizer object and attach it to our media player.
-        Log.i(TAG, "AudioTrack audio session ID: " + _amplify.getAudioTrackSessionId());
-        _visualizer = new Visualizer(0);
-        if (_visualizer.getEnabled()) {
-            _visualizer.setEnabled(false);
+        Log.i(TAG, "AudioTrack audio session ID: " + amplify.getAudioTrackSessionId());
+        visualizer = new Visualizer(0);
+        if (visualizer.getEnabled()) {
+            visualizer.setEnabled(false);
         }
-        _visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
 
-        _visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+        visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
             public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes,
                                               int samplingRate) {
-                _visualizerView.updateVisualizer(bytes);
+                visualizerView.updateVisualizer(bytes);
             }
 
             public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
             }
         }, Visualizer.getMaxCaptureRate(), true, false);
 
-        _visualizer.setEnabled(true);
+        visualizer.setEnabled(true);
     }
 
     private class HeadSetIntentReceiver extends BroadcastReceiver {
@@ -307,12 +300,12 @@ public class AmplifyFragment extends Fragment {
                     case 0:
                         onMessageReceived(state);
                         Log.d(TAG, "Headset is unplugged");
-                        _headsetConnected = false;
+                        headsetConnected = false;
                         break;
                     case 1:
                         onMessageReceived(state);
                         Log.d(TAG, "Headset is plugged");
-                        _headsetConnected = true;
+                        headsetConnected = true;
                         break;
                     default:
                         onMessageReceived(-1);

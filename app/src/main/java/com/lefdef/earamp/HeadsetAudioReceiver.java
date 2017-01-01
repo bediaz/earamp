@@ -11,12 +11,14 @@ import android.support.v4.content.LocalBroadcastManager;
  * http://stackoverflow.com/questions/16409309/how-to-detect-headphone-plug-event-in-offline-mode
  */
 public class HeadsetAudioReceiver extends BroadcastReceiver {
+    private static final String TAG = "HEADSETAUDIORECEIVER";
+
     public static final String[] HEADPHONE_ACTIONS = {
             Intent.ACTION_HEADSET_PLUG,
             "android.bluetooth.headset.action.STATE_CHANGED",
             "android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED"
     };
-    String TAG = "HEADSETAUDIORECEIVER";
+
 
     @Override
     public void onReceive(final Context context, final Intent intent) {

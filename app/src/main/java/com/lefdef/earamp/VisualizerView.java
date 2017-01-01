@@ -33,7 +33,7 @@ class VisualizerView extends View {
     private Rect mRect = new Rect();
 
     private Paint mForePaint = new Paint();
-    private Paint _rectPaint = new Paint();
+    private Paint rectPaint = new Paint();
 
     public VisualizerView(Context context) {
         super(context);
@@ -57,10 +57,10 @@ class VisualizerView extends View {
         mForePaint.setAntiAlias(true);
         mForePaint.setColor(Color.rgb(128, 0, 128));
 
-        _rectPaint.setStyle(Paint.Style.STROKE);
-        _rectPaint.setStrokeWidth(8f);
-        _rectPaint.setAntiAlias(true);
-        _rectPaint.setColor(Color.rgb(0, 0, 0));
+        rectPaint.setStyle(Paint.Style.STROKE);
+        rectPaint.setStrokeWidth(8f);
+        rectPaint.setAntiAlias(true);
+        rectPaint.setColor(Color.rgb(0, 0, 0));
     }
 
     public void updateVisualizer(byte[] bytes) {
@@ -85,7 +85,7 @@ class VisualizerView extends View {
         }
 
         mRect.set(0, 0, getWidth(), getHeight());
-        canvas.drawRect(mRect, _rectPaint);
+        canvas.drawRect(mRect, rectPaint);
 
         for (int i = 0; i < mBytes.length - 1; i++) {
             mPoints[i * 4] = mRect.width() * i / (mBytes.length - 1);
