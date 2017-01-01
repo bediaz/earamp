@@ -5,10 +5,7 @@
     <string name="action_record">Record</string>
     <string name="action_record_and_play">Amplify</string>
     <string name="amplify_switch">Amplify</string>
-    <string name="amplify_textview"> </string>
     <string name="title_activity_amplify">AmplifyActivity</string>
-    <string name="activity_main"></string>
-    <string name="amplify_textview_state"></string>
     <string name="action_listen">LISTEN</string>
     <string name="action_stop">STOP</string>
     <string name="action_pause">PAUSE</string>

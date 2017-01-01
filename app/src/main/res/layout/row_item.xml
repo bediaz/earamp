@@ -12,7 +12,7 @@
         <!--android:layout_height="80dp"-->
         <!--android:layout_alignParentLeft="true"-->
         <!--/>-->
-    <me.lefdef.earamp.CircleButton
+    <com.lefdef.earamp.CircleButton
         android:id="@+id/icon"
         android:layout_width="72dp"
         android:layout_height="72dp"

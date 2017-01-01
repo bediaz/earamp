@@ -1,17 +1,13 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
         <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <color name="light_cyan">#D5FFEA</color>
-    <color name="light_orange">#FFBD35</color>
-    <color name="light_gray">#FFD3D3D3</color>
-    <color name="light_green">#8DBA56</color>
-    <color name="crimson">#CA0023</color>
-    <color name="slate_blue">#6AB5FF</color>
-    <color name="electric_purple">#BF00FF</color>
-    <color name="pale_green">#9FFF9F</color>
-    <color name="blue_gray">#263238</color>
 </resources>

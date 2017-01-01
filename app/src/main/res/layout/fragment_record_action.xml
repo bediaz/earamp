@@ -14,7 +14,7 @@
         android:background="@color/blue_gray"
         android:orientation="horizontal">
 
-        <me.lefdef.earamp.CircleButton
+        <com.lefdef.earamp.CircleButton
             android:id="@+id/recButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +27,7 @@
             />
 
 
-        <me.lefdef.earamp.CircleButton
+        <com.lefdef.earamp.CircleButton
             android:id="@+id/stopButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
