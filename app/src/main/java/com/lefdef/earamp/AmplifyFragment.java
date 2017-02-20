@@ -44,9 +44,8 @@ public class AmplifyFragment extends Fragment {
     private Visualizer visualizer;
     private VisualizerView visualizerView;
 
-    private HeadsetAudioReceiver audioStreamReceiver;
     private IntentFilter audioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-    private HeadSetIntentReceiver headSetIntentReceiver = new HeadSetIntentReceiver();
+    private WiredHeadsetReceiver  headSetIntentReceiver = new WiredHeadsetReceiver();
 
     private Context context;
     private int volumeLevel;
@@ -111,7 +110,6 @@ public class AmplifyFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         context = container.getContext();
         // layout stuff
         final RelativeLayout rootView = (RelativeLayout) inflater.inflate(R.layout.fragment_amplify, container, false);
@@ -162,9 +160,7 @@ public class AmplifyFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
         btnOnOff.setSoundEffectsEnabled(false);
-
         btnOnOff.setOnClickListener(new View.OnClickListener() {
 
             @Override
